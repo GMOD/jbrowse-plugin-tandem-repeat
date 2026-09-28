@@ -2,7 +2,7 @@
   "name": "jbrowse-plugin-tandem-repeat",
   "version": "0.1.0",
   "description": "JBrowse 2 view of a tandem repeat's alleles: one bar per haplotype, each copy coloured by its repeat unit, read from VCF 4.5 <CNV:TR> records",
-  "license": "GPL-3.0-or-later",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/GMOD/jbrowse-plugin-tandem-repeat.git"
