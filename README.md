@@ -34,14 +34,28 @@ allele's length.
 TRGT and vamos state repeats in fields of their own, so their output needs
 converting to these fields before the view draws it.
 
+## Writing a record from a graph
+
+No repeat finder states KIV-2 per copy from assemblies today: TRGT needs reads
+spanning the array, and vamos skips any allele over 30 kb.
+`scripts/tandem-repeat-vcf.mjs` writes the record from a pangenome graph cut
+instead, a GFA with W lines that holds the array and its flanks, plus a BED row
+naming the array on the reference:
+
+```
+node scripts/tandem-repeat-vcf.mjs cut.gfa --bed arrays.bed --name KIV-2 > kiv2.vcf
+```
+
+The script needs nothing beyond Node. Its header states how it splits copies and
+groups them into units.
+
 ## The KIV-2 example
 
 The hosted HPRC demo's `hprc_kiv2_copies` track holds one record: LPA's KIV-2
-array in GRCh38 and eight HPRC haplotypes. jbrowse-plugin-graphgenomeviewer's
-`scripts/tandem-repeat-vcf.mjs` wrote it from a pangenome graph cut. The script
-splits each haplotype's array into copies and groups copies within 1% of each
-other into a unit. Two units come out, 2.3% apart, matching the two repeat types
-long-read studies of LPA report.
+array in GRCh38 and eight HPRC haplotypes. `scripts/tandem-repeat-vcf.mjs` wrote
+it from the demo's KIV-2 graph cut, splitting each haplotype's array into copies
+and grouping copies within 1% of each other into a unit. Two units come out,
+2.3% apart, matching the two repeat types long-read studies of LPA report.
 
 ## Usage
 
