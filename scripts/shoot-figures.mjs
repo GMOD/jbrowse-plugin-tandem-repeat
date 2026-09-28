@@ -5,6 +5,7 @@
 // shoots the view it opens. Every figure in img/ comes from here.
 //
 //   node scripts/shoot-figures.mjs [kiv2_copies ...] [--version main] [--out img]
+//     [--width 1400]
 //
 // The demo config does not name this plugin, so its request is answered with
 // the config plus a plugins entry, and the entry's url with the local dist.
@@ -39,6 +40,8 @@ const { values, positionals } = parseArgs({
   options: {
     version: { type: 'string', default: 'main' },
     out: { type: 'string', default: 'img' },
+    // the plugin store's cards want an 800 px image
+    width: { type: 'string', default: '1400' },
   },
 })
 
@@ -93,7 +96,7 @@ async function serveOn(client) {
 
 async function shoot(browser, name, figure) {
   const page = await browser.newPage()
-  await page.setViewport({ width: 1400, height: 900 })
+  await page.setViewport({ width: Number(values.width), height: 900 })
   const errors = []
   page.on('pageerror', e => errors.push(String(e)))
   page.on('workercreated', w => {
