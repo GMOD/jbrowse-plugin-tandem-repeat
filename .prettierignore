@@ -1,2 +1,4 @@
 pnpm-lock.yaml
-src/bandage/bandage-layout.js
+# git-cliff generates CHANGELOG.md — reformatting would fight the generator on
+# every release
+CHANGELOG.md

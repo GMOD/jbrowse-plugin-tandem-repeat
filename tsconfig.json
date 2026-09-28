@@ -20,12 +20,5 @@
     "noEmit": true
   },
   "include": ["src"],
-  "exclude": [
-    "**/dist/",
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx",
-    "src/launchSubgraph/testEnv.ts",
-    "src/GraphGenomeView/renderer/recordingCanvas.ts",
-    "src/bandage/bandage-layout.js"
-  ]
+  "exclude": ["**/dist/", "src/**/*.test.ts", "src/**/*.test.tsx"]
 }

@@ -12,18 +12,12 @@ export default defineConfig(
       'esbuild.mjs',
       'dist/*',
       'scripts/*',
-      // build/test config, outside tsconfig.eslint.json's `src` project so
-      // typed linting cannot parse them
+      // build config, outside tsconfig.eslint.json's `src` project so typed
+      // linting cannot parse it
       'vitest.config.ts',
-      'config/**',
-      // JBrowse instances the e2e harness creates in the repo root; gitignored,
-      // but flat config does not consult .gitignore, so a demo run would
-      // otherwise fail lint on hundreds of bundled files
-      '.test-jbrowse-*/**',
-      // generated Emscripten output, see src/bandage/README.md. The build tree
-      // is here too because CMake writes a compiler_depend.ts into it.
-      'src/bandage/bandage-layout.js',
-      '.wasm-build/**',
+      // other sessions' worktrees, whose half-done edits would fail the
+      // release's lint in the primary checkout
+      '.claude/**',
     ],
   },
   {
@@ -144,15 +138,6 @@ export default defineConfig(
           caughtErrors: 'none',
         },
       ],
-    },
-  },
-  {
-    files: ['test/**'],
-    rules: {
-      'no-console': 'off',
-      // import-x/named can't follow re-exports in @testing-library packages;
-      // TypeScript already catches missing named imports at compile time.
-      'import-x/named': 'off',
     },
   },
 )
