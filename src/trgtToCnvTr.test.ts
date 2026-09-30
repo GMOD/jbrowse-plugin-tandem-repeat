@@ -60,17 +60,17 @@ test("a TRGT record's MS spans become the runs of each allele", () => {
   expect(f[3]).toBe('G')
   expect(f[4]).toBe('<CNV:TR>,<CNV:TR>')
   expect(f[7]).toContain('SVLEN=57,57;RN=2,2;RUS=CAG,CCG,CAG,CCG;RUL=3,3,3,3')
-  expect(f[7]).toContain('RUC=17,9,24,9;RB=51,27,72,27')
+  expect(f[7]).toContain('RUC=17,9,24,9;RB=57,27,78,27')
   const repeat = tandemRepeatOf(feature(line!))!
   expect(repeat.units.map(u => [u.sequence, u.copies])).toEqual([
     ['CAG', 41],
     ['CCG', 18],
   ])
   expect(repeat.alleles.map(a => [a.label, a.bp])).toEqual([
-    ['S1 (1)', 78],
-    ['S1 (2)', 99],
+    ['S1 (1)', 84],
+    ['S1 (2)', 105],
     ['S2 (1)', 57],
-    ['S2 (2)', 78],
+    ['S2 (2)', 84],
   ])
 })
 
@@ -100,6 +100,45 @@ test('a locus of several motifs with no MS is skipped', () => {
   expect(convertRecord(record(['GT:AL', '1/2:84,105']))).toEqual({
     skipped: 'alleles state no runs (2 motifs, no MS)',
   })
+})
+
+// Records TRGT 5.1.0 wrote: the first from its example/ reads, the second from
+// error-free reads of (CAG)17 CAACAG (CCG)9 and (CAG)24 CAACAG (CCG)9 over a
+// (CAG)10 CAACAG (CCG)7 reference, merged with `trgt merge`. TRGT spans the CAG
+// after CAACAG as a run of its own, and its MS leaves the CAA between spans.
+const trgtExample = [
+  'chrA\t10001\t.\tC' + 'CAG'.repeat(20) + '\t' + 'C' + 'CAG'.repeat(11),
+  '.\t.\tTRID=TR1;END=10061;MOTIFS=CAG;STRUC=<TR>',
+  'GT:AL:ALLR:SD:MC:MS:AP:AM',
+  '1/1:33,33:30-39,33-33:15,14:11,11:0(0-33),0(0-33):1,1:.,.',
+].join('\t')
+
+const trgtMerged = [
+  'chrB\t600\t.\tT' + 'CAG'.repeat(10) + 'CAACAG' + 'CCG'.repeat(7),
+  `T${allele(17, 9)},T${allele(24, 9)}`,
+  '.\t.\tTRID=HTT;END=657;MOTIFS=CAG,CCG;STRUC=(CAG)n(CAACAG)(CCG)n',
+  'GT:AL:ALLR:SD:MC:MS:AP:AM:PS',
+  '1/2:84,105:84-84,105-105:20,20:18_9,25_9:0(0-51)_0(54-57)_1(57-84),0(0-72)_0(75-78)_1(78-105):0.988095,0.990476:.,.:.',
+  '1/2:84,105:84-84,105-105:20,20:18_9,25_9:0(0-51)_0(54-57)_1(57-84),0(0-72)_0(75-78)_1(78-105):0.988095,0.990476:.,.:.',
+].join('\t')
+
+test("TRGT's own single-motif record states its copies and bases", () => {
+  const f = convertRecord(trgtExample).line!.split('\t')
+  expect(f[7]).toContain('SVLEN=60;RN=1;RUS=CAG;RUL=3;RUC=11;RB=33')
+})
+
+test("a run's bases sum to the allele's AL, interruption included", () => {
+  const { line } = convertRecord(trgtMerged)
+  const info = line!.split('\t')[7]!
+  expect(info).toContain('RN=3,3;RUS=CAG,CAG,CCG,CAG,CAG,CCG')
+  expect(info).toContain('RUC=17,1,9,24,1,9;RB=54,3,27,75,3,27')
+  const repeat = tandemRepeatOf(feature(line!))!
+  expect(repeat.alleles.map(a => [a.label, a.bp])).toEqual([
+    ['S1 (1)', 84],
+    ['S1 (2)', 105],
+    ['S2 (1)', 84],
+    ['S2 (2)', 105],
+  ])
 })
 
 test('a record with no ALT allele is skipped', () => {

@@ -49,9 +49,15 @@ motif's. A locus of several motifs with no `MS` states no runs, so the script
 skips it and reports the count on stderr. `GT`, `AL`, `SD` and TRGT's other
 sample fields pass through. The script needs nothing beyond Node.
 
-The runs are the spans TRGT called, so bases between spans, an interruption
-inside an array, belong to no run and an allele's runs can sum to less than its
-length.
+The runs are the spans TRGT called. Bases between two spans, an interruption
+like the CAA of `(CAG)nCAACAG(CCG)n`, count in the preceding run's `RB`, so an
+allele's `RB`s sum to its length, TRGT's `AL`, while `RUC` states only the
+copies TRGT found. TRGT spans the CAG after that interruption as a run of its
+own, so an allele can carry two consecutive runs of one unit.
+
+We ran the script on TRGT 5.1.0's own example and on its output for error-free
+reads of a two-motif repeat, before and after `trgt merge`. Real reads with
+sequencing errors and several interruptions are untested.
 
 ## Writing a record from a graph
 

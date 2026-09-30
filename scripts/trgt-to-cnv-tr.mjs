@@ -14,10 +14,13 @@
 // says so on stderr. TRGT's own FORMAT fields, GT, AL, SD, MC and the rest, pass
 // through, and GT indexes the same alleles.
 //
-// The runs describe the sequence TRGT called, not a re-decomposition of it:
-// interruptions between MS spans belong to no run, so a run's bases can sum to
-// less than the allele's. Sort and bgzip the output before loading it in a
-// tabix-indexed track.
+// The runs are the spans TRGT called. Bases between two spans, an interruption
+// like the CAA of (CAG)nCAACAG(CCG)n, and any before the first or after the
+// last, count in the preceding run's RB, so an allele's RBs sum to its length
+// (TRGT's AL) while RUC states only the copies TRGT found. TRGT also spans the
+// CAG after that interruption as a run of its own, so an allele can carry two
+// consecutive runs of one unit. Sort and bgzip the output before loading it in
+// a tabix-indexed track.
 import fs from 'node:fs'
 import readline from 'node:readline'
 import { pathToFileURL } from 'node:url'
@@ -52,7 +55,9 @@ function parseInfo(text) {
 function parseSpans(ms) {
   return ms.split('_').flatMap(span => {
     const m = /^(\d+)\((\d+)-(\d+)\)$/.exec(span)
-    return m ? [{ motif: Number(m[1]), bp: Number(m[3]) - Number(m[2]) }] : []
+    return m
+      ? [{ motif: Number(m[1]), start: Number(m[2]), end: Number(m[3]) }]
+      : []
   })
 }
 
@@ -80,14 +85,19 @@ export function allelesRuns({ alts, motifs, formatKeys, samples }) {
   return alts.map((alt, i) => {
     const bp = alt.length - 1
     const stated = spans.get(i + 1)
-    if (stated?.length) {
-      return stated
-        .filter(s => motifs[s.motif] !== undefined && s.bp > 0)
-        .map(s => ({
-          motif: motifs[s.motif],
-          count: round(s.bp / motifs[s.motif].length),
-          bp: s.bp,
-        }))
+    const usable = (stated ?? [])
+      .filter(s => motifs[s.motif] !== undefined && s.end > s.start)
+      .sort((a, b) => a.start - b.start)
+    if (usable.length) {
+      return usable.map((s, k) => {
+        const motif = motifs[s.motif]
+        const next = usable[k + 1]?.start ?? bp
+        return {
+          motif,
+          count: round((s.end - s.start) / motif.length),
+          bp: Math.max(s.end - s.start, next - (k === 0 ? 0 : s.start)),
+        }
+      })
     }
     return motifs.length === 1 && bp > 0
       ? [{ motif: motifs[0], count: round(bp / motifs[0].length), bp }]
