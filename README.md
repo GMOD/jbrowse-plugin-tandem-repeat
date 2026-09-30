@@ -34,6 +34,25 @@ allele's length.
 TRGT and vamos state repeats in fields of their own, so their output needs
 converting to these fields before the view draws it.
 
+## Writing records from TRGT
+
+`scripts/trgt-to-cnv-tr.mjs` rewrites a TRGT VCF, one sample or a `trgt merge`
+of many, as `<CNV:TR>` records:
+
+```
+node scripts/trgt-to-cnv-tr.mjs merged.vcf.gz > merged.cnv-tr.vcf
+```
+
+Each ALT allele takes the runs its samples' `MS` field states. Without `MS`, a
+locus of one motif states one run of it, its copies the allele's length over the
+motif's. A locus of several motifs with no `MS` states no runs, so the script
+skips it and reports the count on stderr. `GT`, `AL`, `SD` and TRGT's other
+sample fields pass through. The script needs nothing beyond Node.
+
+The runs are the spans TRGT called, so bases between spans, an interruption
+inside an array, belong to no run and an allele's runs can sum to less than its
+length.
+
 ## Writing a record from a graph
 
 No repeat finder states KIV-2 per copy from assemblies today: TRGT needs reads
