@@ -6,7 +6,7 @@
   fields, as `scripts/trgt-to-cnv-tr.mjs` does for TRGT's `MOTIFS` and `MS`. The
   view reads only the spec's fields.
 - Report vamos's silent last-record choice to its authors (README, "Writing a
-  record from a graph"). Colin's call.
+  record from a graph"), if it's worth filing.
 
 ## Records from a graph
 
