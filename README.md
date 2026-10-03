@@ -74,6 +74,22 @@ node scripts/tandem-repeat-vcf.mjs cut.gfa --bed arrays.bed --name KIV-2 > kiv2.
 The script needs nothing beyond Node. Its header states how it splits copies and
 groups them into units.
 
+vamos 3.1.1 in contig mode, given a catalogue of KIV-2's two units, can split
+all nine haplotypes copy for copy as the script does, but only once patched and
+fed by hand:
+
+- A constant in `src/vntr.cpp` caps an allele at 30,000 bp whatever `-L` says.
+  Patched to `max(30000, opt.maxLocusLength)`, it reaches the KIV-2 alleles.
+- Its DP tables cost 15.7 bytes a cell, 5–26 GB per KIV-2 allele. Dropping the
+  two tables nothing reads, storing the path as `int8_t` and keeping two rolling
+  score columns brings that to 1.07 bytes a cell with the same output.
+- minimap2 can't bridge the expansion: its primary record for HG00128 aligns 33
+  kb of the 127 kb contig and soft-clips the rest. vamos then annotates the
+  aligned part as the whole allele, 6 copies for HG00128's 23. Each contig has
+  to go in as one record built from the graph instead.
+- Contig mode filters no secondary or supplementary records, so given several
+  for a contig, vamos silently keeps whichever comes last in the file.
+
 ## The KIV-2 example
 
 The hosted HPRC demo's `hprc_kiv2_copies` track holds one record: LPA's KIV-2
