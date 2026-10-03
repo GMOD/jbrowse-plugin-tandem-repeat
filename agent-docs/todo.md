@@ -15,12 +15,3 @@
 - Run the script on ABCA7 and on the CFHR window. If each array has one unit,
   per-copy colour is a KIV-2 story, and graphgenomeviewer's walk rows already
   tile the rest by unit.
-
-## Upstream
-
-- jbrowse-components: `getEnd` in `plugins/variants/src/VcfFeature/util.ts` ends
-  a symbolic allele with no END at start + |SVLEN|, one base short of the END =
-  POS + |SVLEN| the spec gives (its `<DEL>` example: POS 321682, SVLEN -205, END
-  321887). The same record ends one base later when it states END. Minor, and
-  `index.test.ts` pins the current 599 for POS 100, SVLEN 500. `tandemRepeatOf`
-  doesn't depend on it: it drops the padding base and measures by SVLEN itself.
