@@ -316,12 +316,16 @@ for (let remaining = n; remaining > 1;) {
 }
 const clusters = [...Map.groupBy(distinct.keys(), root).values()]
 
-// A unit's sequence is its medoid among the copies of full length, so RUS is
-// a copy some haplotype carries rather than a consensus none does.
+// A unit's sequence is its medoid among the copies of typical length, so RUS
+// is a copy some haplotype carries rather than a consensus none does. A copy
+// spanning two, where the array start mutated, contains every other and would
+// otherwise win.
 const unitOf = new Map()
 for (const members of clusters) {
-  const full = members.filter(i => distinct[i].length >= 0.9 * typical)
-  const pool = full.length > 0 ? full : members
+  const typicalLength = members.filter(
+    i => Math.abs(distinct[i].length - typical) <= 0.1 * typical,
+  )
+  const pool = typicalLength.length > 0 ? typicalLength : members
   const medoid = pool.reduce((best, i) =>
     linkage([i], members) < linkage([best], members) ? i : best,
   )
