@@ -5,3 +5,7 @@ extend-exclude = [
   "CHANGELOG.md",
   "dist/",
 ]
+
+[default.extend-words]
+# TRGT's INFO field for a repeat's structure
+STRUC = "STRUC"
