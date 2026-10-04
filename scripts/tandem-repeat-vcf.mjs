@@ -175,30 +175,88 @@ if (longest > 1.5 * typical) {
   )
 }
 
-function kmers(s) {
-  const out = new Set()
-  for (let i = 0; i + K <= s.length; i++) {
-    const k = s.slice(i, i + K)
-    const r = revcomp(k)
-    out.add(k < r ? k : r)
+const CODE = { A: 0, C: 1, G: 2, T: 3 }
+const KMER_MASK = 4 ** K - 1
+const unusualKmers = new Map()
+function unusualKmerCode(k) {
+  const r = revcomp(k)
+  const key = k < r ? k : r
+  if (!unusualKmers.has(key)) {
+    unusualKmers.set(key, KMER_MASK + 1 + unusualKmers.size)
   }
-  return out
+  return unusualKmers.get(key)
 }
+// Canonical k-mers as sorted distinct integers; one holding a base other than
+// ACGT keeps its own code past the 2-bit range.
+function kmers(s) {
+  const out = []
+  let forward = 0
+  let reverse = 0
+  let run = 0
+  for (let i = 0; i < s.length; i++) {
+    const c = CODE[s[i]]
+    if (c === undefined) {
+      run = 0
+    } else {
+      forward = ((forward << 2) | c) & KMER_MASK
+      reverse = (reverse >>> 2) | ((3 - c) << (2 * K - 2))
+      run++
+    }
+    if (run >= K) {
+      out.push(Math.min(forward, reverse))
+    } else if (i + 1 >= K) {
+      out.push(unusualKmerCode(s.slice(i + 1 - K, i + 1)))
+    }
+  }
+  const sorted = Uint32Array.from(out).sort()
+  return sorted.filter((k, i) => i === 0 || k !== sorted[i - 1])
+}
+function overlap(x, y) {
+  let shared = 0
+  for (let i = 0, j = 0; i < x.length && j < y.length;) {
+    if (x[i] < y[j]) {
+      i++
+    } else if (x[i] > y[j]) {
+      j++
+    } else {
+      shared++
+      i++
+      j++
+    }
+  }
+  return shared
+}
+const n = distinct.length
 const sets = distinct.map(kmers)
+// Copies of one array share most k-mers, so each set is held as its symmetric
+// difference with the k-mers most copies carry, and |A∩B| =
+// |M| - |M\A| - |M\B| + |(AΔM)∩(BΔM)|.
+const carriers = new Map()
+for (const set of sets) {
+  for (const k of set) {
+    carriers.set(k, (carriers.get(k) ?? 0) + 1)
+  }
+}
+const majority = Uint32Array.from(
+  [...carriers].filter(([, c]) => 2 * c > n).map(([k]) => k),
+).sort()
+const isMajority = new Set(majority)
+const lacks = sets.map(set => majority.length - overlap(set, majority))
+const differs = sets.map(set => {
+  const has = new Set(set)
+  return Uint32Array.from([
+    ...set.filter(k => !isMajority.has(k)),
+    ...majority.filter(k => !has.has(k)),
+  ]).sort()
+})
 // Containment rather than Jaccard, so the array's last, partial copy measures
 // against the part of a full copy it covers.
 function distance(a, b) {
-  const [small, large] =
-    sets[a].size < sets[b].size ? [sets[a], sets[b]] : [sets[b], sets[a]]
-  let shared = 0
-  for (const k of small) {
-    if (large.has(k)) {
-      shared++
-    }
-  }
-  return shared === 0 ? 1 : -Math.log(shared / small.size) / K
+  const shared =
+    majority.length - lacks[a] - lacks[b] + overlap(differs[a], differs[b])
+  const small = Math.min(sets[a].length, sets[b].length)
+  return shared === 0 ? 1 : -Math.log(shared / small) / K
 }
-const n = distinct.length
 const D = Array.from({ length: n }, () => new Float64Array(n))
 for (let a = 0; a < n; a++) {
   for (let b = a + 1; b < n; b++) {
@@ -206,7 +264,6 @@ for (let a = 0; a < n; a++) {
   }
 }
 
-let clusters = distinct.map((_, i) => [i])
 const linkage = (x, y) => {
   let sum = 0
   for (const a of x) {
@@ -216,23 +273,48 @@ const linkage = (x, y) => {
   }
   return sum / (x.length * y.length)
 }
-for (;;) {
-  let best
-  for (let x = 0; x < clusters.length; x++) {
-    for (let y = x + 1; y < clusters.length; y++) {
-      const d = linkage(clusters[x], clusters[y])
-      if (d <= divergence && (!best || d < best.d)) {
-        best = { x, y, d }
-      }
+// Average linkage by the nearest-neighbour chain: merging reciprocal nearest
+// neighbours with the Lance-Williams update builds the same tree as merging
+// the closest pair each time, and the units are its merges within divergence.
+const L = D.map(row => row.slice())
+const size = new Array(n).fill(1)
+const alive = new Array(n).fill(true)
+const parent = Array.from({ length: n }, (_, i) => i)
+const root = i => (parent[i] === i ? i : (parent[i] = root(parent[i])))
+const chain = []
+for (let remaining = n; remaining > 1;) {
+  if (chain.length === 0) {
+    chain.push(alive.indexOf(true))
+  }
+  const a = chain.at(-1)
+  const previous = chain.at(-2)
+  let b = previous
+  let d = previous === undefined ? Infinity : L[a][previous]
+  for (let k = 0; k < n; k++) {
+    if (alive[k] && k !== a && L[a][k] < d) {
+      b = k
+      d = L[a][k]
     }
   }
-  if (!best) {
-    break
+  if (b !== previous) {
+    chain.push(b)
+    continue
   }
-  const merged = [...clusters[best.x], ...clusters[best.y]]
-  clusters = clusters.filter((_, i) => i !== best.x && i !== best.y)
-  clusters.push(merged)
+  chain.length -= 2
+  if (d <= divergence) {
+    parent[root(b)] = root(a)
+  }
+  for (let k = 0; k < n; k++) {
+    if (alive[k] && k !== a && k !== b) {
+      L[a][k] = L[k][a] =
+        (size[a] * L[a][k] + size[b] * L[b][k]) / (size[a] + size[b])
+    }
+  }
+  size[a] += size[b]
+  alive[b] = false
+  remaining--
 }
+const clusters = [...Map.groupBy(distinct.keys(), root).values()]
 
 // A unit's sequence is its medoid among the copies of full length, so RUS is
 // a copy some haplotype carries rather than a consensus none does.
