@@ -10,8 +10,12 @@
 
 ## Records from a graph
 
-- The whole HPRC panel at KIV-2: `scripts/tandem-repeat-vcf.mjs` compares every
-  distinct copy with every other, so all 464 haplotypes need sketches first.
+- Host the whole HPRC panel's KIV-2 record (464 haplotypes, ~20 s from the
+  cohort cut) beside or in place of the eight-haplotype one, and reshoot.
+- Seven HPRC KIV-2 copies span two or three units (11.1-16.6 kb) where the array
+  start mutated, and each counts as one copy; the script warns only of the
+  longest. Splitting such a copy needs a second probe, e.g. the array start's
+  last 24 bases. NA19043#1 reaches both flanks with one 3 kb copy.
 - Run the script on ABCA7 and on the CFHR window. If each array has one unit,
   per-copy colour is a KIV-2 story, and graphgenomeviewer's walk rows already
   tile the rest by unit.
