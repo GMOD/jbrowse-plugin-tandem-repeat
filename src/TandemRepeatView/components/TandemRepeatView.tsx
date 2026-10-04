@@ -210,6 +210,7 @@ const TandemRepeatView = observer(function TandemRepeatView({
   const { alleles, refName, start, end } = repeat
   const referenceBp = end - start
   const { rowPx, barPx, labelled } = rowLayout(alleles.length)
+  const rows = labelled ? alleles : [...alleles].sort((a, b) => b.bp - a.bp)
   const readouts = alleles.map(a => readout(a, referenceBp, repeat.unitLength))
   const labelPx = labelled
     ? Math.max(...alleles.map(a => a.label.length)) * CHAR_PX + PAD
@@ -241,7 +242,9 @@ const TandemRepeatView = observer(function TandemRepeatView({
           <b>{repeat.name}</b> · {refName}:{(start + 1).toLocaleString()}-
           {end.toLocaleString()} · {alleles.length} alleles, each on its own bp
           axis
-          {labelled ? null : ', too many to label: hover a copy for its row'}
+          {labelled
+            ? null
+            : ', longest first, too many to label: hover a copy for its row'}
         </Typography>
         <Legend repeat={repeat} referenceBp={referenceBp} />
       </div>
@@ -279,7 +282,7 @@ const TandemRepeatView = observer(function TandemRepeatView({
           stroke={faint}
           strokeDasharray="3 2"
         />
-        {alleles.map((allele, i) => (
+        {rows.map((allele, i) => (
           <Row
             key={`${allele.label}-${i}`}
             allele={allele}
