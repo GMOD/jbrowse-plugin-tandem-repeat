@@ -98,6 +98,14 @@ it from the demo's KIV-2 graph cut, splitting each haplotype's array into copies
 and grouping copies within 1% of each other into a unit. Two units come out,
 2.3% apart, matching the two repeat types long-read studies of LPA report.
 
+`hprc_kiv2_copies_all` holds the same array in all 464 haplotypes whose walks
+reach both of its flanks, GRCh38 included. Past 30 rows the view squeezes its
+rows into the height of 30, longest first and unlabelled; hovering a copy names
+its haplotype. Unit 2 opens 245 of the 464 arrays, and every array that holds
+unit 2 opens with it except GRCh38's, whose only unit 2 copy sits fourth.
+
+![LPA's KIV-2 array in 464 HPRC haplotypes, longest first, each copy coloured by its unit](img/kiv2_copies_all.png)
+
 ## Usage
 
 Needs JBrowse 5.0.0-beta.9 or later.

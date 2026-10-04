@@ -29,6 +29,12 @@ const FIGURES = {
     display: 'LinearVariantDisplay',
     at: 160631000,
   },
+  kiv2_copies_all: {
+    loc: 'chr6:160,596,000-160,666,000',
+    trackId: 'hprc_kiv2_copies_all',
+    display: 'LinearVariantDisplay',
+    at: 160631000,
+  },
   kiv2_copies_multisample: {
     loc: 'chr6:160,596,000-160,666,000',
     trackId: 'hprc_kiv2_copies',

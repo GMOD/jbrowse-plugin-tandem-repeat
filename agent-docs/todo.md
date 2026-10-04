@@ -10,8 +10,6 @@
 
 ## Records from a graph
 
-- Host the whole HPRC panel's KIV-2 record (464 haplotypes, ~20 s from the
-  cohort cut) beside or in place of the eight-haplotype one, and reshoot.
 - Seven HPRC KIV-2 copies span two or three units (11.1-16.6 kb) where the array
   start mutated, and each counts as one copy; the script warns only of the
   longest. Splitting such a copy needs a second probe, e.g. the array start's
