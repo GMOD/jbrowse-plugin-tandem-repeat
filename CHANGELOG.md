@@ -1,3 +1,22 @@
+## [0.1.2](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/v0.1.1...v0.1.2) (2026-10-04)
+
+### Other Changes
+
+- Figures take --width, for the plugin store's 800 px card ([259e9aa](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/259e9aac18830b35090230b9881678803933a739))
+- Tandem-repeat-vcf.mjs moves here from graphgenomeviewer; figures boot a candidate config ([33657e2](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/33657e2b2ff4c969cab3b07bf27f2b6905d2321e))
+- Scripts/trgt-to-cnv-tr.mjs rewrites a TRGT VCF as <CNV:TR> records ([2266907](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/22669073765d121d293e0febdcd98ff78cc43198))
+- Trgt-to-cnv-tr.mjs folds the bases between TRGT's MS spans into the run before them ([2cd5fce](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/2cd5fce0eed347407866a7292d5b82a8a32c7b36))
+- README records why vamos isn't the KIV-2 finder; a todo takes the graph handoff's open items ([5e719f3](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/5e719f3b486117109aa9fcfd7c442f112e133389))
+- The vamos report waits on whether it's worth filing ([946ffa5](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/946ffa5d9ab5738837129ccdbff495f52cdb7d37))
+- The VcfFeature note says what is actually off, the SVLEN fallback's end ([d07ca66](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/d07ca6675d93c8fc9b57daae92c38bcd421d482e))
+- The VcfFeature SVLEN end is fixed upstream (jbrowse-components ff33abe30b) ([76c60e6](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/76c60e6ee44f92024a72a881fee9b96b0549c138))
+- Tandem-repeat-vcf.mjs clusters a whole-cohort cut in seconds ([1683238](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/168323867f6e48217cc3369b5479898b4f883801))
+- Tandem-repeat-vcf.mjs takes a unit's RUS from copies of typical length ([fbdadc5](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/fbdadc5e9a71fbcbaab38382f4e0a65222efa627))
+- Show repeat copies squashes a cohort's rows into the view's height ([a8f83fc](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/a8f83fcc429d858ad9aeb1672db209a5f54712c6))
+- The cohort KIV-2 record waits on hosting; its merged copies stay open ([4713750](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/47137501bdfdf211c5e9eb30516814097e49b590))
+- Show repeat copies sorts a squashed cohort longest first ([5a7ad07](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/5a7ad07e5be00193c69703ab93d59c9d292b016d))
+- The cohort KIV-2 record gets a figure and a README paragraph ([32e8390](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/32e839058f0a640dc274456ddd92c62534a326d9))
+
 ## [0.1.1](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/...v0.1.1) (2026-09-28)
 
 ### Other Changes
