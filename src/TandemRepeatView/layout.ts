@@ -31,6 +31,11 @@ export function copiesOf(allele: RepeatAllele, units: RepeatUnit[]) {
   return boxes
 }
 
+// A unit's name where the record gives one, else its rank by copies
+export function unitLabel(units: RepeatUnit[], i: number) {
+  return units[i]?.name ?? `unit ${i + 1}`
+}
+
 export const ROW_PX = 22
 export const BAR_PX = 12
 const ROWS_MAX_PX = 30 * ROW_PX
@@ -65,7 +70,7 @@ export function squeezedOrder(alleles: RepeatAllele[], units: RepeatUnit[]) {
     rule:
       rarest === undefined
         ? 'longest first'
-        : `most unit ${rarest + 1} first, then longest`,
+        : `most ${unitLabel(units, rarest)} first, then longest`,
   }
 }
 

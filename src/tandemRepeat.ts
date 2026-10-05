@@ -3,7 +3,8 @@ import type { Feature } from '@jbrowse/core/util'
 // A tandem repeat's alleles as the view draws them, read off one VCF 4.5
 // <CNV:TR> record. Each ALT allele states its runs: RN says how many
 // RUS/RUL/RUC/RB entries each allele takes, and RUB holds one entry per copy of
-// every run. A sample's GT picks its alleles.
+// every run. A sample's GT picks its alleles. RUNAME, outside the spec, names
+// each run's unit beside its RUS, as tandem-repeat-vcf.mjs --unit-names writes.
 
 // `count` copies of one unit, which indexes TandemRepeat.units
 export interface RepeatRun {
@@ -16,6 +17,7 @@ export interface RepeatRun {
 
 export interface RepeatUnit {
   length: number
+  name?: string
   // copies across the record's alleles, which orders the units
   copies: number
   sequence?: string
@@ -89,6 +91,7 @@ export function mayStateRepeat(type: string | undefined) {
 interface ParsedRun {
   key: string
   length: number
+  name?: string
   sequence?: string
   count: number
   bp: number
@@ -101,6 +104,7 @@ function tandemAlleles(f: FeatureLike) {
   const alts = strings(own(f, 'ALT'))
   const rn = numbers(info(f, 'RN'))
   const rus = strings(info(f, 'RUS'))
+  const runame = strings(info(f, 'RUNAME'))
   const rul = numbers(info(f, 'RUL'))
   const ruc = numbers(info(f, 'RUC'))
   const rb = numbers(info(f, 'RB'))
@@ -115,6 +119,7 @@ function tandemAlleles(f: FeatureLike) {
       const stated = rus[k]
       const sequence = stated && IUPAC.test(stated) ? stated : undefined
       const length = rul[k] ?? sequence?.length
+      const name = runame[k] && runame[k] !== '.' ? runame[k] : undefined
       const bp = rb[k]
       const count =
         ruc[k] ?? (length && bp !== undefined ? bp / length : undefined)
@@ -124,6 +129,7 @@ function tandemAlleles(f: FeatureLike) {
         runs.push({
           key: sequence ?? String(length),
           length,
+          ...(name ? { name } : {}),
           ...(sequence ? { sequence } : {}),
           count,
           bp: bp ?? Math.round(length * count),
@@ -138,11 +144,19 @@ function tandemAlleles(f: FeatureLike) {
 
 function unitsOf(alleles: (ParsedRun[] | undefined)[]) {
   const units = new Map<string, RepeatUnit & { key: string }>()
-  for (const { key, length, sequence, count } of alleles.flatMap(
+  for (const { key, length, name, sequence, count } of alleles.flatMap(
     runs => runs ?? [],
   )) {
-    const copies = (units.get(key)?.copies ?? 0) + count
-    units.set(key, { key, length, copies, ...(sequence ? { sequence } : {}) })
+    const known = units.get(key)
+    const copies = (known?.copies ?? 0) + count
+    const named = known?.name ?? name
+    units.set(key, {
+      key,
+      length,
+      ...(named ? { name: named } : {}),
+      copies,
+      ...(sequence ? { sequence } : {}),
+    })
   }
   return [...units.values()].sort(
     (a, b) =>
@@ -243,7 +257,7 @@ export function tandemRepeatOf(f: FeatureLike): TandemRepeat | undefined {
       ...(runs
         ? {
             runs: runs.map(
-              ({ key, length: _length, sequence: _s, ...run }) => ({
+              ({ key, length: _length, name: _n, sequence: _s, ...run }) => ({
                 unit: index.get(key)!,
                 ...run,
               }),

@@ -38,12 +38,13 @@ const { values: opts, positionals } = parseArgs({
     name: { type: 'string' },
     divergence: { type: 'string', default: '0.01' },
     sites: { type: 'string' },
+    'unit-names': { type: 'string' },
   },
 })
 const [gfaPath] = positionals
 if (!gfaPath || !opts.bed) {
   console.error(
-    'usage: tandem-repeat-vcf.mjs cut.gfa --bed arrays.bed [--name NAME] [--divergence 0.01] [--sites intervals.bed]',
+    'usage: tandem-repeat-vcf.mjs cut.gfa --bed arrays.bed [--name NAME] [--divergence 0.01] [--sites intervals.bed] [--unit-names A,B]',
   )
   process.exit(1)
 }
@@ -533,6 +534,29 @@ for (const h of haplotypes) {
   samples.set(h.sample, calls)
 }
 
+// --unit-names names the units in the order the view numbers them, most
+// copies across the record's alleles first, into RUNAME beside RUS
+const unitNames = new Map()
+if (opts['unit-names']) {
+  const unitCopies = new Map()
+  for (const run of alleles.flat()) {
+    unitCopies.set(run.unit, (unitCopies.get(run.unit) ?? 0) + run.copyBp.length)
+  }
+  const ranked = [...unitCopies.keys()].sort(
+    (a, b) =>
+      unitCopies.get(b) - unitCopies.get(a) ||
+      a.length - b.length ||
+      a.localeCompare(b),
+  )
+  const names = opts['unit-names'].split(',')
+  if (names.length !== ranked.length) {
+    throw new Error(
+      `--unit-names gives ${names.length} names for ${ranked.length} units`,
+    )
+  }
+  ranked.forEach((unit, i) => unitNames.set(unit, names[i]))
+}
+
 const sum = xs => xs.reduce((a, b) => a + b, 0)
 const alleleBp = runs => sum(runs.map(r => sum(r.copyBp)))
 const cn = bp => Number((bp / referenceBp).toFixed(4))
@@ -541,6 +565,11 @@ const info = [
   `CN=${alleles.map(runs => cn(alleleBp(runs))).join(',')}`,
   `RN=${alleles.map(runs => runs.length).join(',')}`,
   `RUS=${alleles.flatMap(runs => runs.map(r => r.unit)).join(',')}`,
+  ...(unitNames.size > 0
+    ? [
+        `RUNAME=${alleles.flatMap(runs => runs.map(r => unitNames.get(r.unit))).join(',')}`,
+      ]
+    : []),
   `RUC=${alleles.flatMap(runs => runs.map(r => r.copyBp.length)).join(',')}`,
   `RB=${alleles.flatMap(runs => runs.map(r => sum(r.copyBp))).join(',')}`,
   `RUB=${alleles.flatMap(runs => runs.flatMap(r => r.copyBp)).join(',')}`,
@@ -576,6 +605,11 @@ const lines = [
   '##INFO=<ID=CN,Number=A,Type=Float,Description="Copy number of allele">',
   '##INFO=<ID=RN,Number=A,Type=Integer,Description="Total number of repeat sequences in this allele">',
   '##INFO=<ID=RUS,Number=.,Type=String,Description="Repeat unit sequence of the corresponding repeat sequence">',
+  ...(unitNames.size > 0
+    ? [
+        '##INFO=<ID=RUNAME,Number=.,Type=String,Description="Name of the repeat unit of the corresponding repeat sequence">',
+      ]
+    : []),
   '##INFO=<ID=RUC,Number=.,Type=Float,Description="Repeat unit count of corresponding repeat sequence">',
   '##INFO=<ID=RB,Number=.,Type=Integer,Description="Total number of bases in the corresponding repeat sequence">',
   '##INFO=<ID=RUB,Number=.,Type=Integer,Description="Number of bases in each individual repeat unit">',

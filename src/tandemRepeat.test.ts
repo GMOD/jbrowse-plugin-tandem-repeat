@@ -93,3 +93,14 @@ test("a menu gates on the record's ALT, or on its type where that is all it has"
   expect(mayStateRepeat('insertion')).toBe(false)
   expect(mayStateRepeat(undefined)).toBe(false)
 })
+
+test('RUNAME names each unit, which the legend then uses', () => {
+  const repeat = tandemRepeatOf({
+    ...tandem,
+    INFO: { ...tandem.INFO, RUNAME: ['KIV-2B', 'KIV-2A', 'KIV-2A'] },
+  })!
+  expect(repeat.units.map(u => u.name)).toEqual(['KIV-2A', 'KIV-2B'])
+  expect(tandemRepeatOf(tandem)!.units.every(u => u.name === undefined)).toBe(
+    true,
+  )
+})

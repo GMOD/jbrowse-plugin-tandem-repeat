@@ -9,6 +9,7 @@ import {
   readout,
   rowLayout,
   squeezedOrder,
+  unitLabel,
 } from '../layout'
 
 import type { RepeatAllele, TandemRepeat } from '../../tandemRepeat'
@@ -62,7 +63,7 @@ function Legend({
         <div key={i} style={legendRow}>
           <div style={{ ...swatch, backgroundColor: unitColor(i) }} />
           <span>
-            unit {i + 1} · {unit.length.toLocaleString()} bp
+            {unitLabel(repeat.units, i)} · {unit.length.toLocaleString()} bp
           </span>
         </div>
       ))}
@@ -150,7 +151,7 @@ function Row({
               fill={unitColor(copy.unit)}
             >
               <title>
-                {`${allele.label}: copy ${i + 1} of ${copies.length}, unit ${copy.unit + 1}, ${copy.bp.toLocaleString()} bp`}
+                {`${allele.label}: copy ${i + 1} of ${copies.length}, ${unitLabel(repeat.units, copy.unit)}, ${copy.bp.toLocaleString()} bp`}
               </title>
             </rect>
           )
