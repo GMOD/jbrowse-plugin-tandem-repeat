@@ -2,8 +2,8 @@
 //
 // Opens the hosted HPRC demo on a released JBrowse with this checkout's dist/
 // standing in for the published bundle, right-clicks a repeat record, chooses
-// the menu item, and shoots the view it opens. Every figure in img/ comes from
-// here.
+// the menu item, picks a figure's Group by… column from the view's menu, and
+// shoots the view. Every figure in img/ comes from here.
 //
 //   node scripts/shoot-figures.mjs [kiv2_copies ...] [--version main] [--out img]
 //     [--width 1400] [--config candidate.json] [--store]
@@ -34,6 +34,13 @@ const FIGURES = {
     trackId: 'hprc_kiv2_copies_all',
     display: 'LinearVariantDisplay',
     at: 160631000,
+  },
+  kiv2_copies_all_by_superpopulation: {
+    loc: 'chr6:160,596,000-160,666,000',
+    trackId: 'hprc_kiv2_copies_all',
+    display: 'LinearVariantDisplay',
+    at: 160631000,
+    groupBy: 'superpopulation',
   },
   kiv2_copies_multisample: {
     loc: 'chr6:160,596,000-160,666,000',
@@ -110,7 +117,7 @@ async function serveOn(client) {
 
 async function shoot(browser, name, figure) {
   const page = await browser.newPage()
-  await page.setViewport({ width: Number(values.width), height: 900 })
+  await page.setViewport({ width: Number(values.width), height: 1200 })
   const errors = []
   page.on('pageerror', e => errors.push(String(e)))
   page.on('workercreated', w => {
@@ -156,6 +163,21 @@ async function shoot(browser, name, figure) {
       timeout: 15_000,
     },
   )
+  if (figure.groupBy) {
+    const menus = await page.$$('[data-testid="view_menu_icon"]')
+    await menus.at(-1).click()
+    await (await page.waitForSelector('::-p-text(Group by…)')).click()
+    await (await page.waitForSelector(`::-p-text(${figure.groupBy})`)).click()
+    await page.waitForSelector('[data-testid="tandem-repeat-section"]', {
+      timeout: 15_000,
+    })
+    while (await page.$('[role="menu"]')) {
+      await page.keyboard.press('Escape')
+      await sleep(300)
+    }
+    await page.evaluate(() => document.activeElement?.blur())
+    await page.mouse.move(0, 0)
+  }
   await sleep(500)
   const panel = await view.evaluateHandle(el => el.parentElement)
   const file = path.join(values.out, `${name}.png`)
@@ -164,8 +186,12 @@ async function shoot(browser, name, figure) {
     '[data-testid="tandem-repeat-row"]',
     els => els.length,
   )
+  const sections = await page.$$eval(
+    '[data-testid="tandem-repeat-section"]',
+    els => els.map(el => el.textContent),
+  )
   console.log(
-    `${file}: ${rows} rows${errors.length ? `, errors: ${errors.join('; ')}` : ''}`,
+    `${file}: ${rows} rows${sections.length ? ` in ${sections.join(', ')}` : ''}${errors.length ? `, errors: ${errors.join('; ')}` : ''}`,
   )
   await page.close()
 }

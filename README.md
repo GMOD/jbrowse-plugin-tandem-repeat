@@ -113,6 +113,18 @@ node scripts/tandem-repeat-vcf.mjs cut.gfa --bed arrays.bed --name KIV-2 \
 
 ![LPA's KIV-2 array in 464 HPRC haplotypes, those carrying unit 2 first, each copy coloured by its unit](img/kiv2_copies_all.png)
 
+## Grouping rows by sample
+
+When the track's adapter names a `samplesTsvLocation`, the view keeps that
+file's rows in the session, and its menu's **Group by…** offers each column by
+its header. Each value gets a section under a header naming it and its
+haplotypes, ordered as JBrowse orders a track's facets, with the rows that have
+no value last. The sections share the ruler, the row height and the reference
+line, and squeezed rows keep their sort within each. The demo's cohort track,
+grouped by `superpopulation`:
+
+![LPA's KIV-2 array in all HPRC haplotypes, one section per superpopulation, each copy coloured by its unit](img/kiv2_copies_all_by_superpopulation.png)
+
 ## Usage
 
 Needs JBrowse 5.0.0-beta.9 or later.
