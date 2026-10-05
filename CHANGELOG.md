@@ -1,3 +1,16 @@
+## [0.1.3](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/v0.1.2...v0.1.3) (2026-10-05)
+
+### Other Changes
+
+- Typos accepts TRGT's STRUC field ([38714dc](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/38714dcf82c6258876835c470501e0c270de57f7))
+- Tandem-repeat-vcf.mjs splits copies whose array start mutated ([8c86ef7](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/8c86ef701c8047209785400f9ec5b87a08b7496c))
+- Reshoot the cohort KIV-2 figure with its merged copies split ([980ec56](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/980ec56bdfa656b1752cb6f6541d2c42e130bad3))
+- NA19043#1's short KIV-2 is read-supported; the units are KIV-2A and B by exon 1 ([8d08b72](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/8d08b72cb60e7a61b8a938a5bf369d0412b811d5))
+- Tandem-repeat-vcf.mjs --sites reports where the units differ inside named intervals ([bed79fd](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/bed79fdb2c30e49097579778f1e1329077047ea7))
+- Squeezed rows sort by copies of the rarest unit, then longest ([8ae4906](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/8ae4906e088ea5bd2cacc885793d5b6c807caf24))
+- Prettier formats the squeezed-order code ([2d0f420](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/2d0f42083fa68a90554f0fd7e7f80647208e8a4e))
+- The cohort figure sorts unit 2 carriers first, and --sites names KIV-2B ([e3f65fb](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/e3f65fb7ac82e27a84ed52f61f854e58fc7681b8))
+
 ## [0.1.2](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/v0.1.1...v0.1.2) (2026-10-04)
 
 ### Other Changes
