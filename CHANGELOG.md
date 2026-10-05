@@ -1,3 +1,15 @@
+## [0.1.4](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/v0.1.3...v0.1.4) (2026-10-05)
+
+### Other Changes
+
+- KIV-2B naming shipped in 0.1.3 and the tutorial ([ddb85d0](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/ddb85d011d28ab149d0ebedc78913aeab85b9818))
+- Per-copy colour stays a KIV-2 story; ABCA7, CFHR and AMY1 runs declined ([a3ffa22](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/a3ffa226e47dbc52866fd2553d2c933a00736c6a))
+- Units take names: tandem-repeat-vcf.mjs --unit-names writes RUNAME, and the view labels by it ([0d3325a](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/0d3325a7b09e64c5cd10e572eed18720cea737f3))
+- Prettier formats the unit-name code ([63b4886](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/63b48860036198af0132b520365088a042f337d1))
+- Each allele names the VCF sample that carries it ([2856d7d](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/2856d7dd48e5cf6b43b50111858294d9ba4cf270))
+- Group by… stacks the view's rows into a section per samples TSV value ([97dc0c7](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/97dc0c742a670b8b2bc99dbf4dd709fd05b79260))
+- The cohort grouped by superpopulation, shot through Group by… ([9758b3a](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/9758b3a7207862542b512a8468e20712612c20e6))
+
 ## [0.1.3](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/v0.1.2...v0.1.3) (2026-10-05)
 
 ### Other Changes
