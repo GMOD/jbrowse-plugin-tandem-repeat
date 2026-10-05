@@ -83,7 +83,11 @@ test('squeezed rows gather the rarest unit, then run longest first', () => {
     ],
   })
   const { rows, rule } = squeezedOrder(
-    [allele('none', 90_000, 0), allele('one', 30_000, 1), allele('two', 20_000, 2)],
+    [
+      allele('none', 90_000, 0),
+      allele('one', 30_000, 1),
+      allele('two', 20_000, 2),
+    ],
     two,
   )
   expect(rows.map(r => r.label)).toEqual(['two', 'one', 'none'])

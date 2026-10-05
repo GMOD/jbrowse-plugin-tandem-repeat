@@ -61,9 +61,7 @@ export function squeezedOrder(alleles: RepeatAllele[], units: RepeatUnit[]) {
           .filter(run => run.unit === rarest)
           .reduce((sum, run) => sum + run.count, 0)
   return {
-    rows: [...alleles].sort(
-      (a, b) => carried(b) - carried(a) || b.bp - a.bp,
-    ),
+    rows: [...alleles].sort((a, b) => carried(b) - carried(a) || b.bp - a.bp),
     rule:
       rarest === undefined
         ? 'longest first'
