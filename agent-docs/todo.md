@@ -10,10 +10,9 @@
 
 ## Records from a graph
 
-- Seven HPRC KIV-2 copies span two or three units (11.1-16.6 kb) where the array
-  start mutated, and each counts as one copy; the script warns only of the
-  longest. Splitting such a copy needs a second probe, e.g. the array start's
-  last 24 bases. NA19043#1 reaches both flanks with one 3 kb copy.
+- NA19043#1 reaches both flanks of KIV-2 with one 3 kb copy, shorter than any
+  unit; check whether its assembly is broken there before reading it as a
+  one-copy allele.
 - Run the script on ABCA7 and on the CFHR window. If each array has one unit,
   per-copy colour is a KIV-2 story, and graphgenomeviewer's walk rows already
   tile the rest by unit.

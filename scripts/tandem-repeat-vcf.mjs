@@ -9,7 +9,8 @@
 // The BED row (chrom, start, end, name, unit) names the array on the
 // reference walk. Each W walk is cut between the reference nodes flanking the
 // array and split into copies wherever the reference array's first 24 bases
-// recur. Copies whose k-mer containment puts them within
+// recur, and where those bases mutated, wherever 24-mers from further into the
+// unit agree on a start. Copies whose k-mer containment puts them within
 // --divergence of each other, average linkage, share a unit, and a unit's
 // RUS is its medoid copy. Consecutive copies of one unit are one repeat
 // sequence (RN), with RUC copies, RB bases and each copy's bases in RUB. A
@@ -164,14 +165,85 @@ for (const walk of walks) {
   haplotypes.push({ ...walk, copies })
 }
 
+const medianLength = copies => {
+  const lengths = [...new Set(copies)].map(c => c.length).sort((a, b) => a - b)
+  return lengths[lengths.length >> 1]
+}
+const typical = medianLength(haplotypes.flatMap(h => h.copies))
+
+// Where a copy's first bases mutated, the probe misses that copy's start and
+// two or three units read as one. Probes taken every BACKUP_STEP bases into
+// the reference's first copy each imply a unit start at their hit less their
+// offset, and the copy splits where BACKUP_SUPPORT of them agree to within
+// BACKUP_SLOP bases, at least half a typical copy from any other split.
+const BACKUP_STEP = 250
+const BACKUP_SUPPORT = 3
+const BACKUP_SLOP = 50
+const firstCopy = copiesOf(
+  referenceSequence.slice(
+    array.start - reference.start,
+    array.end - reference.start,
+  ),
+)[0]
+const backups = []
+for (let at = BACKUP_STEP; at + PROBE <= firstCopy.length; at += BACKUP_STEP) {
+  backups.push({ at, kmer: firstCopy.slice(at, at + PROBE) })
+}
+
+function splitMerged(copy) {
+  if (copy.length <= 1.5 * typical) {
+    return [copy]
+  }
+  const implied = []
+  for (const { at, kmer } of backups) {
+    for (let i = copy.indexOf(kmer); i >= 0; i = copy.indexOf(kmer, i + 1)) {
+      implied.push(i - at)
+    }
+  }
+  implied.sort((a, b) => a - b)
+  const cuts = [0]
+  let group = []
+  const settle = () => {
+    const start = group[group.length >> 1]
+    if (
+      group.length >= BACKUP_SUPPORT &&
+      start - cuts.at(-1) >= typical / 2 &&
+      copy.length - start >= typical / 2
+    ) {
+      cuts.push(start)
+    }
+    group = []
+  }
+  for (const start of implied) {
+    if (group.length > 0 && start - group[0] > BACKUP_SLOP) {
+      settle()
+    }
+    group.push(start)
+  }
+  settle()
+  return cuts.map((start, i) => copy.slice(start, cuts[i + 1] ?? copy.length))
+}
+
+let merged = 0
+for (const h of haplotypes) {
+  h.copies = h.copies.flatMap(copy => {
+    const pieces = splitMerged(copy)
+    if (pieces.length > 1) {
+      merged++
+      console.error(
+        `${h.sample}#${h.haplotype}: a ${copy.length} bp copy splits into ${pieces.map(p => p.length).join(' + ')}`,
+      )
+    }
+    return pieces
+  })
+}
+
 const distinct = [...new Set(haplotypes.flatMap(h => h.copies))]
 const referenceBp = array.end - array.start
-const lengths = distinct.map(c => c.length).sort((a, b) => a - b)
-const typical = lengths[lengths.length >> 1]
-const longest = lengths.at(-1)
+const longest = Math.max(...distinct.map(c => c.length))
 if (longest > 1.5 * typical) {
   console.error(
-    `a ${longest} bp copy against a typical ${typical}: the array start may be mutated in one`,
+    `a ${longest} bp copy against a typical ${typical} stays whole: no backup probes agree on a start inside it`,
   )
 }
 
