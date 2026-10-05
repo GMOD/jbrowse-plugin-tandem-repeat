@@ -14,6 +14,7 @@
   exons exact, the intron cut short. It is real, not an assembly error: HiFi
   Flagger flags nothing within 100 kb, and 28 MAPQ>=20 HiFi reads span it with
   no insertion over 3 bp.
-- Run the script on ABCA7 and on the CFHR window. If each array has one unit,
-  per-copy colour is a KIV-2 story, and graphgenomeviewer's walk rows already
-  tile the rest by unit.
+- Decided against (2026-10-04) running the script on ABCA7, CFHR or AMY1: at
+  ABCA7's 51 bp motif, 1% k-mer clustering gives each SNP a unit of its own, and
+  CFHR and amylase are structural haplotypes the graph's walk rows and lanes
+  already draw. Per-copy colour is a KIV-2 story.
