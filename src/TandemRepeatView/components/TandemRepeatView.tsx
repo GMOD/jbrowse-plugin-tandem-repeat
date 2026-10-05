@@ -3,12 +3,12 @@ import { observer } from 'mobx-react'
 
 import {
   BAR_PX,
+  SECTION_HEADER_PX,
   axisTicks,
   copiesOf,
+  facetSections,
   formatBp,
   readout,
-  rowLayout,
-  squeezedOrder,
   unitLabel,
 } from '../layout'
 
@@ -211,9 +211,12 @@ const TandemRepeatView = observer(function TandemRepeatView({
   }
   const { alleles, refName, start, end } = repeat
   const referenceBp = end - start
-  const { rowPx, barPx, labelled } = rowLayout(alleles.length)
-  const squeezed = squeezedOrder(alleles, repeat.units)
-  const rows = labelled ? alleles : squeezed.rows
+  const { rowPx, barPx, labelled, rule, sections, rowsPx } = facetSections(
+    alleles,
+    repeat.units,
+    model.samples,
+    model.facet,
+  )
   const readouts = alleles.map(a => readout(a, referenceBp, repeat.unitLength))
   const labelPx = labelled
     ? Math.max(...alleles.map(a => a.label.length)) * CHAR_PX + PAD
@@ -226,7 +229,7 @@ const TandemRepeatView = observer(function TandemRepeatView({
   const scale = plotPx / maxBp
   const left = PAD + labelPx
   const X = (bp: number) => left + bp * scale
-  const height = AXIS_PX + alleles.length * rowPx + PAD
+  const height = AXIS_PX + rowsPx + PAD
   const text = theme.palette.text.primary
   const faint = theme.palette.text.secondary
   const gap = theme.palette.background.paper
@@ -245,9 +248,8 @@ const TandemRepeatView = observer(function TandemRepeatView({
           <b>{repeat.name}</b> · {refName}:{(start + 1).toLocaleString()}-
           {end.toLocaleString()} · {alleles.length} alleles, each on its own bp
           axis
-          {labelled
-            ? null
-            : `, ${squeezed.rule}, too many to label: hover a copy for its row`}
+          {rule ? `, ${rule}` : null}
+          {labelled ? null : ', too many to label: hover a copy for its row'}
         </Typography>
         <Legend repeat={repeat} referenceBp={referenceBp} />
       </div>
@@ -285,22 +287,42 @@ const TandemRepeatView = observer(function TandemRepeatView({
           stroke={faint}
           strokeDasharray="3 2"
         />
-        {rows.map((allele, i) => (
-          <Row
-            key={`${allele.label}-${i}`}
-            allele={allele}
-            repeat={repeat}
-            y={AXIS_PX + i * rowPx + rowPx / 2}
-            barPx={barPx}
-            labelled={labelled}
-            X={X}
-            scale={scale}
-            labelRight={left - 8}
-            text={text}
-            gap={gap}
-            referenceBp={referenceBp}
-          />
-        ))}
+        {sections.map(section => {
+          const headerPx = section.title ? SECTION_HEADER_PX : 0
+          const top = AXIS_PX + section.top + headerPx
+          return (
+            <g key={section.key}>
+              {section.title ? (
+                <text
+                  x={PAD}
+                  y={top - 4}
+                  fontSize={11}
+                  fontWeight="bold"
+                  fill={text}
+                  data-testid="tandem-repeat-section"
+                >
+                  {section.title}
+                </text>
+              ) : null}
+              {section.rows.map((allele, i) => (
+                <Row
+                  key={`${allele.label}-${i}`}
+                  allele={allele}
+                  repeat={repeat}
+                  y={top + i * rowPx + rowPx / 2}
+                  barPx={barPx}
+                  labelled={labelled}
+                  X={X}
+                  scale={scale}
+                  labelRight={left - 8}
+                  text={text}
+                  gap={gap}
+                  referenceBp={referenceBp}
+                />
+              ))}
+            </g>
+          )
+        })}
       </svg>
     </div>
   )

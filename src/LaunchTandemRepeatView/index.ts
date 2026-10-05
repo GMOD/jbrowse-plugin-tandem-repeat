@@ -5,6 +5,7 @@ import {
   getSession,
 } from '@jbrowse/core/util'
 
+import { sampleRowsOf } from '../sampleMetadata'
 import {
   hasTandemAllele,
   mayStateRepeat,
@@ -27,7 +28,9 @@ export const MENU_LABEL = 'Show repeat copies'
 // The right-clicked record as each display holds it. The multi-sample display
 // holds a feature with its ALT but neither INFO nor samples, and
 // LinearVariantDisplay a type and an id; both fetch the whole record on click.
+// The multi-sample display also holds its samples' metadata rows.
 export interface DisplayModel extends IStateTreeNode {
+  sources?: unknown
   contextMenuItems: () => MenuItem[]
   contextMenuInfo?: {
     feature?: Feature
@@ -86,27 +89,47 @@ export function launchTarget(self: DisplayModel): FetchRecord | undefined {
     : undefined
 }
 
-function open(self: DisplayModel, feature: Feature | undefined) {
-  const session = getSession(self)
-  const repeat = feature && tandemRepeatOf(feature)
-  if (!repeat) {
-    session.notify('This record states no tandem repeat alleles', 'info')
-    return
+// The variants plugin's RPC reads the adapter's samplesTsvLocation; unknown
+// to this plugin's RpcRegistry, so named as a plain string
+const GET_SOURCES = 'MultiSampleVariantGetSources' as string
+
+async function samplesOf(self: DisplayModel) {
+  if (Array.isArray(self.sources) && self.sources.length > 0) {
+    return sampleRowsOf(self.sources)
   }
-  session.addView('TandemRepeatView', {
-    displayName: `${repeat.name} copies`,
-    repeat,
-  })
+  const { rpcManager } = getSession(self)
+  const answer = (await rpcManager.call(getRpcSessionId(self), GET_SOURCES, {
+    adapterConfig: getConf(getContainingTrack(self), 'adapter'),
+  })) as { sources?: unknown } | undefined
+  return sampleRowsOf(answer?.sources)
 }
 
-function launch(self: DisplayModel, fetchRecord: FetchRecord) {
-  fetchRecord()
-    .then(feature => {
-      open(self, feature)
+export async function launch(self: DisplayModel, fetchRecord: FetchRecord) {
+  const session = getSession(self)
+  try {
+    const feature = await fetchRecord()
+    const repeat = feature && tandemRepeatOf(feature)
+    if (!repeat) {
+      session.notify('This record states no tandem repeat alleles', 'info')
+      return
+    }
+    const samples = repeat.alleles.some(a => a.sample)
+      ? await samplesOf(self).catch((e: unknown) => {
+          session.notify(
+            `The samples' metadata didn't load, so the view can't group its rows: ${e}`,
+            'warning',
+          )
+          return undefined
+        })
+      : undefined
+    session.addView('TandemRepeatView', {
+      displayName: `${repeat.name} copies`,
+      repeat,
+      ...(samples ? { samples } : {}),
     })
-    .catch((e: unknown) => {
-      getSession(self).notifyError(`${e}`, e)
-    })
+  } catch (e) {
+    session.notifyError(`${e}`, e)
+  }
 }
 
 export function extendStateModel(stateModel: IAnyModelType) {
@@ -124,7 +147,7 @@ export function extendStateModel(stateModel: IAnyModelType) {
                 {
                   label: MENU_LABEL,
                   onClick: () => {
-                    launch(self, fetchRecord)
+                    void launch(self, fetchRecord)
                   },
                 },
               ]

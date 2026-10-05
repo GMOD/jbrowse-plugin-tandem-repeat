@@ -1,3 +1,6 @@
+import { groupKeyComparator } from '@jbrowse/core/util/groupKeys'
+
+import type { Facet, SampleRow } from '../sampleMetadata'
 import type { RepeatAllele, RepeatUnit } from '../tandemRepeat'
 
 export interface CopyBox {
@@ -71,6 +74,78 @@ export function squeezedOrder(alleles: RepeatAllele[], units: RepeatUnit[]) {
       rarest === undefined
         ? 'longest first'
         : `most ${unitLabel(units, rarest)} first, then longest`,
+  }
+}
+
+export const SECTION_HEADER_PX = 16
+
+export interface FacetSection {
+  // '' for the rows with no value
+  key: string
+  title: string
+  // px below the ruler where the section's header strip starts
+  top: number
+  rows: RepeatAllele[]
+}
+
+function haplotypes(n: number) {
+  return `${n} haplotype${n === 1 ? '' : 's'}`
+}
+
+// The rows stacked into one section per value of a samples TSV column, its
+// sample's row deciding each allele's; rows with no value stack last. Every
+// section shares one row pitch, so a section's height follows its row count.
+// Unfaceted, one section without a header holds every row.
+export function facetSections(
+  alleles: RepeatAllele[],
+  units: RepeatUnit[],
+  samples: SampleRow[] | undefined,
+  facet: Facet | undefined,
+) {
+  const pitch = rowLayout(alleles.length)
+  const { labelled } = pitch
+  const squeezed = squeezedOrder(alleles, units)
+  const ordered = labelled ? alleles : squeezed.rows
+  const squeezedRule = labelled ? undefined : squeezed.rule
+  if (!facet) {
+    return {
+      ...pitch,
+      rule: squeezedRule,
+      sections: [{ key: '', title: '', top: 0, rows: ordered }],
+      rowsPx: alleles.length * pitch.rowPx,
+    }
+  }
+  const { field, domain } = facet
+  const valueOf = new Map(samples?.map(row => [row.name, row[field] ?? '']))
+  const groups = new Map<string, RepeatAllele[]>()
+  for (const allele of ordered) {
+    const key = (allele.sample && valueOf.get(allele.sample)) || ''
+    const group = groups.get(key)
+    if (group) {
+      group.push(allele)
+    } else {
+      groups.set(key, [allele])
+    }
+  }
+  let top = 0
+  const sections = [...groups.keys()]
+    .sort(groupKeyComparator(domain))
+    .map(key => {
+      const rows = groups.get(key)!
+      const section = {
+        key,
+        title: `${key || `${field}: none`} · ${haplotypes(rows.length)}`,
+        top,
+        rows,
+      }
+      top += SECTION_HEADER_PX + rows.length * pitch.rowPx
+      return section
+    })
+  return {
+    ...pitch,
+    rule: `grouped by ${field}${squeezedRule ? `, within each ${squeezedRule}` : ''}`,
+    sections,
+    rowsPx: top,
   }
 }
 

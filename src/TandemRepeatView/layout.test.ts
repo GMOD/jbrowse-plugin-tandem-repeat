@@ -1,6 +1,8 @@
 import {
+  SECTION_HEADER_PX,
   axisTicks,
   copiesOf,
+  facetSections,
   formatBp,
   readout,
   rowLayout,
@@ -111,4 +113,94 @@ test('a named unit labels itself; an unnamed one by its rank', () => {
   expect(
     squeezedOrder([], [units[0]!, { ...units[1]!, name: 'KIV-2B' }]).rule,
   ).toBe('most KIV-2B first, then longest')
+})
+
+describe('facet sections', () => {
+  const two = [
+    { length: 5536, copies: 20, name: 'KIV-2A' },
+    { length: 5559, copies: 3, name: 'KIV-2B' },
+  ]
+  const allele = (sample: string | undefined, bp: number, b: number) => ({
+    label: `${sample}#1`,
+    ...(sample ? { sample } : {}),
+    bp,
+    runs: [
+      ...(b ? [{ unit: 1, count: b, bp: b * 5559 }] : []),
+      { unit: 0, count: 2, bp: bp - b * 5559 },
+    ],
+  })
+  const samples = [
+    { name: 'EUR1', superpopulation: 'EUR' },
+    { name: 'EUR2', superpopulation: 'EUR' },
+    { name: 'AFR1', superpopulation: 'AFR' },
+    { name: 'BLANK', superpopulation: '' },
+  ]
+  const cohort = [
+    ...Array.from({ length: 60 }, (_, i) => allele('EUR1', 50_000 + i, 0)),
+    allele('EUR2', 30_000, 1),
+    allele('AFR1', 20_000, 0),
+    allele('AFR1', 40_000, 2),
+    allele('UNLISTED', 60_000, 0),
+    allele('BLANK', 60_000, 0),
+    allele(undefined, 60_000, 0),
+    ...Array.from({ length: 10 }, (_, i) => allele('AFR1', 10_000 + i, 0)),
+  ]
+
+  test('sections stack sorted, the rows with no value last', () => {
+    const { sections } = facetSections(cohort, two, samples, {
+      field: 'superpopulation',
+    })
+    expect(sections.map(s => s.title)).toEqual([
+      'AFR · 12 haplotypes',
+      'EUR · 61 haplotypes',
+      'superpopulation: none · 3 haplotypes',
+    ])
+    expect(sections.at(-1)!.key).toBe('')
+    expect(
+      facetSections(cohort, two, samples, {
+        field: 'superpopulation',
+        domain: ['EUR'],
+      }).sections.map(s => s.key),
+    ).toEqual(['EUR', 'AFR', ''])
+  })
+
+  test('every section shares one row pitch, so heights follow row counts', () => {
+    const { rowPx, sections, rowsPx } = facetSections(cohort, two, samples, {
+      field: 'superpopulation',
+    })
+    expect(rowPx).toBe(rowLayout(cohort.length).rowPx)
+    expect(sections.map(s => s.top)).toEqual([
+      0,
+      SECTION_HEADER_PX + 12 * rowPx,
+      2 * SECTION_HEADER_PX + 73 * rowPx,
+    ])
+    expect(rowsPx).toBeCloseTo(3 * SECTION_HEADER_PX + cohort.length * rowPx)
+  })
+
+  test('squeezed rows sort by the rule within each section', () => {
+    const { sections, rule } = facetSections(cohort, two, samples, {
+      field: 'superpopulation',
+    })
+    expect(rule).toBe(
+      'grouped by superpopulation, within each most KIV-2B first, then longest',
+    )
+    expect(sections[0]!.rows.slice(0, 3).map(r => r.bp)).toEqual([
+      40_000, 20_000, 10_009,
+    ])
+    expect(sections[1]!.rows[0]!.sample).toBe('EUR2')
+  })
+
+  test('labelled rows keep their order, and no facet makes one headerless section', () => {
+    const few = cohort.slice(60, 66)
+    const { sections, rule, labelled } = facetSections(few, two, samples, {
+      field: 'superpopulation',
+    })
+    expect(labelled).toBe(true)
+    expect(rule).toBe('grouped by superpopulation')
+    expect(sections[0]!.rows.map(r => r.bp)).toEqual([20_000, 40_000])
+    expect(facetSections(few, two, samples, undefined)).toMatchObject({
+      rule: undefined,
+      sections: [{ key: '', title: '', top: 0, rows: few }],
+    })
+  })
 })
