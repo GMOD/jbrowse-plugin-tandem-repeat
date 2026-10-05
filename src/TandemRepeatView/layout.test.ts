@@ -102,10 +102,13 @@ test('squeezed rows gather the rarest unit, then run longest first', () => {
 })
 
 test('a named unit labels itself; an unnamed one by its rank', () => {
-  const units = [{ length: 5536, copies: 9, name: 'KIV-2A' }, { length: 5559, copies: 1 }]
+  const units = [
+    { length: 5536, copies: 9, name: 'KIV-2A' },
+    { length: 5559, copies: 1 },
+  ]
   expect(unitLabel(units, 0)).toBe('KIV-2A')
   expect(unitLabel(units, 1)).toBe('unit 2')
-  expect(squeezedOrder([], [units[0]!, { ...units[1]!, name: 'KIV-2B' }]).rule).toBe(
-    'most KIV-2B first, then longest',
-  )
+  expect(
+    squeezedOrder([], [units[0]!, { ...units[1]!, name: 'KIV-2B' }]).rule,
+  ).toBe('most KIV-2B first, then longest')
 })

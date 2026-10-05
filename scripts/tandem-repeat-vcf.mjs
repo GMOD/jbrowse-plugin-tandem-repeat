@@ -540,7 +540,10 @@ const unitNames = new Map()
 if (opts['unit-names']) {
   const unitCopies = new Map()
   for (const run of alleles.flat()) {
-    unitCopies.set(run.unit, (unitCopies.get(run.unit) ?? 0) + run.copyBp.length)
+    unitCopies.set(
+      run.unit,
+      (unitCopies.get(run.unit) ?? 0) + run.copyBp.length,
+    )
   }
   const ranked = [...unitCopies.keys()].sort(
     (a, b) =>
