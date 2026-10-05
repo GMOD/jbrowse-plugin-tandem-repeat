@@ -34,8 +34,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "figures": "node scripts/shoot-figures.mjs",
+    "host-compat": "node scripts/host-compat-probe.mjs",
     "prepack": "pnpm build",
-    "preversion": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
+    "preversion": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build && pnpm host-compat",
     "version": "node scripts/version.mjs",
     "postversion": "git push --follow-tags"
   },
