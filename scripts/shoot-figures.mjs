@@ -17,36 +17,33 @@ import { parseArgs } from 'node:util'
 
 import puppeteer from 'puppeteer'
 
-const CONFIG = 'https://jbrowse.org/demos/hprc/config.json'
-const PLUGIN_BASE =
-  'https://jbrowse.org/plugins/jbrowse-plugin-tandem-repeat/latest/dist/'
-const DIST = path.resolve('dist')
+import {
+  CONFIG,
+  STORE_ENTRY,
+  demoServer,
+  demoUrl,
+  openRepeatCopies,
+  sleep,
+  trackSession,
+} from './hostedDemo.mjs'
 
 const FIGURES = {
   kiv2_copies: {
-    loc: 'chr6:160,596,000-160,666,000',
     trackId: 'hprc_kiv2_copies',
     display: 'LinearVariantDisplay',
-    at: 160631000,
   },
   kiv2_copies_all: {
-    loc: 'chr6:160,596,000-160,666,000',
     trackId: 'hprc_kiv2_copies_all',
     display: 'LinearVariantDisplay',
-    at: 160631000,
   },
   kiv2_copies_all_by_superpopulation: {
-    loc: 'chr6:160,596,000-160,666,000',
     trackId: 'hprc_kiv2_copies_all',
     display: 'LinearVariantDisplay',
-    at: 160631000,
     groupBy: 'superpopulation',
   },
   kiv2_copies_multisample: {
-    loc: 'chr6:160,596,000-160,666,000',
     trackId: 'hprc_kiv2_copies',
     display: 'LinearMultiSampleVariantDisplay',
-    at: 160631000,
   },
 }
 
@@ -62,107 +59,31 @@ const { values, positionals } = parseArgs({
   },
 })
 
-const sleep = ms => new Promise(r => setTimeout(r, ms))
-
 const config = values.config
   ? JSON.parse(fs.readFileSync(values.config, 'utf8'))
   : await (await fetch(CONFIG)).json()
 if (!config.plugins?.some(p => p.name === 'TandemRepeat')) {
   config.plugins = [
     ...(config.plugins ?? []),
-    {
-      name: 'TandemRepeat',
-      esmUrl: `${PLUGIN_BASE}jbrowse-plugin-tandem-repeat.esm.js`,
-    },
+    { name: 'TandemRepeat', esmUrl: STORE_ENTRY },
   ]
 }
-const configBody = Buffer.from(JSON.stringify(config))
-
-function bodyFor(url) {
-  if (url.split('?')[0] === CONFIG) {
-    return { body: configBody, type: 'application/json' }
-  }
-  if (!values.store && url.startsWith(PLUGIN_BASE)) {
-    const file = path.join(DIST, url.slice(PLUGIN_BASE.length).split('?')[0])
-    return fs.existsSync(file)
-      ? { body: fs.readFileSync(file), type: 'application/javascript' }
-      : undefined
-  }
-  return undefined
-}
-
-// CDP Fetch on the page and each worker, since the RPC worker imports the
-// plugin too and page.setRequestInterception never resumes a worker's requests
-async function serveOn(client) {
-  client.on('Fetch.requestPaused', async ({ requestId, request }) => {
-    const answer = bodyFor(request.url)
-    await (
-      answer
-        ? client.send('Fetch.fulfillRequest', {
-            requestId,
-            responseCode: 200,
-            responseHeaders: [
-              { name: 'Content-Type', value: answer.type },
-              { name: 'Access-Control-Allow-Origin', value: '*' },
-            ],
-            body: answer.body.toString('base64'),
-          })
-        : client.send('Fetch.continueRequest', { requestId })
-    ).catch(() => {})
-  })
-  await client.send('Fetch.enable', {
-    patterns: [{ urlPattern: `${CONFIG}*` }, { urlPattern: `${PLUGIN_BASE}*` }],
-  })
-}
+const server = demoServer({
+  dist: values.store ? undefined : path.resolve('dist'),
+  configBody: Buffer.from(JSON.stringify(config)),
+})
 
 async function shoot(browser, name, figure) {
   const page = await browser.newPage()
   await page.setViewport({ width: Number(values.width), height: 1200 })
   const errors = []
   page.on('pageerror', e => errors.push(String(e)))
-  page.on('workercreated', w => {
-    serveOn(w.client).catch(() => {})
+  await server.serve(page)
+  await page.goto(demoUrl(values.version, trackSession(figure)), {
+    waitUntil: 'networkidle0',
+    timeout: 120_000,
   })
-  await serveOn(await page.createCDPSession())
-  const session = {
-    views: [
-      {
-        type: 'LinearGenomeView',
-        assembly: 'hg38',
-        loc: figure.loc,
-        tracks: [{ trackId: figure.trackId, type: figure.display }],
-      },
-    ],
-  }
-  await page.goto(
-    `https://jbrowse.org/code/jb2/${values.version}/?config=${encodeURIComponent(CONFIG)}&session=spec-${encodeURIComponent(JSON.stringify(session))}`,
-    { waitUntil: 'networkidle0', timeout: 120_000 },
-  )
-  const container = `[data-testid$="-${figure.trackId}"][data-testid^="trackRenderingContainer"]`
-  await page.waitForSelector(container, { timeout: 60_000 })
-  await sleep(4000)
-  const point = await page.evaluate(
-    (selector, coord) => {
-      const view = window.JBrowseSession.views[0]
-      const r = document.querySelector(selector).getBoundingClientRect()
-      const [region] = view.displayedRegions
-      const offsetPx = (coord - region.start) / view.bpPerPx
-      return { x: r.left + offsetPx - view.offsetPx, y: r.top + 8 }
-    },
-    container,
-    figure.at,
-  )
-  await page.mouse.click(point.x, point.y, { button: 'right' })
-  const item = await page.waitForSelector('::-p-text(Show repeat copies)', {
-    timeout: 15_000,
-  })
-  await item.click()
-  const view = await page.waitForSelector(
-    '[data-testid="tandem-repeat-view"]',
-    {
-      timeout: 15_000,
-    },
-  )
+  const view = await openRepeatCopies(page, figure)
   if (figure.groupBy) {
     const menus = await page.$$('[data-testid="view_menu_icon"]')
     await menus.at(-1).click()
