@@ -37,12 +37,13 @@ const { values: opts, positionals } = parseArgs({
     bed: { type: 'string' },
     name: { type: 'string' },
     divergence: { type: 'string', default: '0.01' },
+    sites: { type: 'string' },
   },
 })
 const [gfaPath] = positionals
 if (!gfaPath || !opts.bed) {
   console.error(
-    'usage: tandem-repeat-vcf.mjs cut.gfa --bed arrays.bed [--name NAME] [--divergence 0.01]',
+    'usage: tandem-repeat-vcf.mjs cut.gfa --bed arrays.bed [--name NAME] [--divergence 0.01] [--sites intervals.bed]',
   )
   process.exit(1)
 }
@@ -408,6 +409,100 @@ for (const members of clusters) {
 console.error(
   `${haplotypes.length} walks, ${haplotypes.reduce((s, h) => s + h.copies.length, 0)} copies (${n} distinct), ${clusters.length} units at ${divergence * 100}% divergence`,
 )
+
+// --sites takes BED rows on the reference inside the array (chrom, start,
+// end, name, score, strand), e.g. one copy's exons. Each distinct copy's
+// stretch at the same place in its unit is read on the row's strand, and the
+// positions where the units' commonest bases differ go to stderr, numbered
+// from 1 along that strand.
+if (opts.sites) {
+  const arraySequence = referenceSequence.slice(
+    array.start - reference.start,
+    array.end - reference.start,
+  )
+  const copyStarts = []
+  for (
+    let i = arraySequence.indexOf(probe);
+    i >= 0;
+    i = arraySequence.indexOf(probe, i + 1)
+  ) {
+    copyStarts.push(i)
+  }
+  const copiesPerUnit = new Map()
+  for (const h of haplotypes) {
+    for (const copy of h.copies) {
+      const unit = unitOf.get(copy)
+      copiesPerUnit.set(unit, (copiesPerUnit.get(unit) ?? 0) + 1)
+    }
+  }
+  const units = [...copiesPerUnit.keys()].sort(
+    (a, b) => copiesPerUnit.get(b) - copiesPerUnit.get(a),
+  )
+  const label = unit =>
+    `unit ${units.indexOf(unit) + 1} (${unit.length} bp, ${copiesPerUnit.get(unit)} copies)`
+  const rows = fs
+    .readFileSync(opts.sites, 'utf8')
+    .split('\n')
+    .map(line => line.split('\t'))
+    .filter(f => f.length >= 3 && f[0] === chrom)
+  for (const [, startText, endText, name = '.', , strand = '+'] of rows) {
+    const start = Number(startText) - array.start
+    const length = Number(endText) - Number(startText)
+    const copyStart = copyStarts.findLast(c => c <= start)
+    if (start < 0 || copyStart === undefined) {
+      console.error(`${name}: not inside the array; skipped`)
+      continue
+    }
+    const at = start - copyStart
+    const template = arraySequence.slice(start, start + length)
+    const tally = new Map(units.map(u => [u, []]))
+    let missed = 0
+    for (const copy of distinct) {
+      let best = { from: -1, mismatches: Infinity }
+      const last = Math.min(copy.length - length, at + 300)
+      for (let from = Math.max(0, at - 300); from <= last; from++) {
+        let mismatches = 0
+        for (let i = 0; i < length && mismatches < best.mismatches; i++) {
+          if (copy[from + i] !== template[i]) {
+            mismatches++
+          }
+        }
+        if (mismatches < best.mismatches) {
+          best = { from, mismatches }
+        }
+      }
+      if (best.mismatches > 0.05 * length) {
+        missed++
+        continue
+      }
+      const stretch = copy.slice(best.from, best.from + length)
+      const read = strand === '-' ? revcomp(stretch) : stretch
+      const columns = tally.get(unitOf.get(copy))
+      ;[...read].forEach((base, i) => {
+        columns[i] ??= new Map()
+        columns[i].set(base, (columns[i].get(base) ?? 0) + 1)
+      })
+    }
+    console.error(
+      `${name} (${length} bp, ${strand} strand): ${distinct.length - missed} of ${distinct.length} distinct copies read`,
+    )
+    const commonest = column => {
+      const total = [...column.values()].reduce((a, b) => a + b, 0)
+      const [base, count] = [...column].sort((a, b) => b[1] - a[1])[0]
+      return { base, share: count / total }
+    }
+    for (let i = 0; i < length; i++) {
+      const tops = units
+        .filter(u => tally.get(u)[i])
+        .map(u => ({ unit: u, ...commonest(tally.get(u)[i]) }))
+      if (new Set(tops.map(t => t.base)).size > 1) {
+        console.error(
+          `  position ${i + 1}: ${tops.map(t => `${label(t.unit)} ${t.base} ${(100 * t.share).toFixed(1)}%`).join(', ')}`,
+        )
+      }
+    }
+  }
+}
 
 function runsOf(copies) {
   const runs = []
