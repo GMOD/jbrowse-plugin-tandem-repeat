@@ -23,9 +23,11 @@ export interface RepeatUnit {
   sequence?: string
 }
 
-// The reference allele states no runs
+// The reference allele states no runs, and an ALT allele of a record with no
+// samples names no sample
 export interface RepeatAllele {
   label: string
+  sample?: string
   bp: number
   runs?: RepeatRun[]
 }
@@ -190,7 +192,12 @@ function sampleAlleles(
 ) {
   const samples = own(f, 'samples') as
     Record<string, Record<string, unknown>> | undefined
-  const out: { label: string; bp: number; runs?: ParsedRun[] }[] = []
+  const out: {
+    label: string
+    sample: string
+    bp: number
+    runs?: ParsedRun[]
+  }[] = []
   for (const [sample, fields] of Object.entries(samples ?? {})) {
     const gt = strings(fields.GT)[0] ?? ''
     const phased = gt.includes('|')
@@ -207,7 +214,11 @@ function sampleAlleles(
       ]
     })
     for (const { k, ...allele } of called) {
-      out.push({ label: labelOf(sample, k, called.length, phased), ...allele })
+      out.push({
+        label: labelOf(sample, k, called.length, phased),
+        sample,
+        ...allele,
+      })
     }
   }
   return out

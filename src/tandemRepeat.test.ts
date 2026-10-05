@@ -44,12 +44,12 @@ test("a <CNV:TR> record's alleles take their runs off RN, RUS, RUC, RB and RUB",
   ]
   const fourA = [{ unit: 0, count: 4, bp: 40, copyBp: [10, 10, 10, 10] }]
   expect(repeat.alleles).toEqual([
-    { label: 'HG00128#1', bp: 49, runs: bThenA },
-    { label: 'HG00128#2', bp: 40, runs: fourA },
-    { label: 'HG00133#2', bp: 49, runs: bThenA },
-    { label: 'GRCh38', bp: 30 },
-    { label: 'HG00099 (1)', bp: 40, runs: fourA },
-    { label: 'HG00099 (2)', bp: 49, runs: bThenA },
+    { label: 'HG00128#1', sample: 'HG00128', bp: 49, runs: bThenA },
+    { label: 'HG00128#2', sample: 'HG00128', bp: 40, runs: fourA },
+    { label: 'HG00133#2', sample: 'HG00133', bp: 49, runs: bThenA },
+    { label: 'GRCh38', sample: 'GRCh38', bp: 30 },
+    { label: 'HG00099 (1)', sample: 'HG00099', bp: 40, runs: fourA },
+    { label: 'HG00099 (2)', sample: 'HG00099', bp: 49, runs: bThenA },
   ])
 })
 
@@ -62,16 +62,20 @@ test('a run stating only RUL is keyed by its length', () => {
   })!
   expect(repeat.units).toEqual([{ length: 5548, copies: 5.5 }])
   expect(repeat.alleles).toEqual([
-    { label: 'HG00097', bp: 30514, runs: [{ unit: 0, count: 5.5, bp: 30514 }] },
+    {
+      label: 'HG00097',
+      sample: 'HG00097',
+      bp: 30514,
+      runs: [{ unit: 0, count: 5.5, bp: 30514 }],
+    },
   ])
 })
 
-test('a record with no samples draws its ALT alleles', () => {
+test('a record with no samples draws its ALT alleles, naming no sample', () => {
   const { samples: _samples, ...sitesOnly } = tandem
-  expect(tandemRepeatOf(sitesOnly)!.alleles.map(a => a.label)).toEqual([
-    'ALT 1',
-    'ALT 2',
-  ])
+  const { alleles } = tandemRepeatOf(sitesOnly)!
+  expect(alleles.map(a => a.label)).toEqual(['ALT 1', 'ALT 2'])
+  expect(alleles.map(a => a.sample)).toEqual([undefined, undefined])
 })
 
 test('a record stating no repeat has no alleles to draw', () => {
