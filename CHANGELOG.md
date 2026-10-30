@@ -1,3 +1,12 @@
+## [0.1.5](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/v0.1.4...v0.1.5) (2026-10-30)
+
+### Other Changes
+
+- Move the demo serving and the right-click into hostedDemo.mjs ([e55ed0b](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/e55ed0baa5216c2b59851d410870fcb345fc243f))
+- Probe the built bundle on hosted JBrowse releases through the HPRC demo ([6d1736e](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/6d1736e98e8a0d9917f1dd34acbe0de47c2f7045))
+- Run host-compat in CI on push and before every version tag ([9870eab](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/9870eabeab28d7befd0e96d98cda2fa339c5be52))
+- Rows render their copies' titles on hover ([7a4f1db](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/7a4f1db5c88dcc128616e5b40944936b01905415))
+
 ## [0.1.4](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/v0.1.3...v0.1.4) (2026-10-05)
 
 ### Other Changes
