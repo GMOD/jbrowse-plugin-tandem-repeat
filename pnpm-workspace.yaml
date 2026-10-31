@@ -7,3 +7,5 @@ minimumReleaseAgeExclude:
   - '@jbrowse/add-track-core@5.0.0-beta.19'
   - '@jbrowse/core@5.0.0-beta.19'
   - '@jbrowse/render-core@5.0.0-beta.19'
+  - '@jbrowse/display-kit@5.0.0-beta.19'
+  - '@jbrowse/display-ui@5.0.0-beta.19'
