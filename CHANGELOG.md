@@ -1,3 +1,14 @@
+## [0.2.0](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/v0.1.5...v0.2.0) (2026-10-31)
+
+### Other Changes
+
+- Triage agent-docs into todo, ideas and reference ([18d2c33](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/18d2c33d0f393654ecd492880d146c4c1c1b5a69))
+- Build against @jbrowse 5.0.0-beta.19 ([64e3697](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/64e36974c2fd75edd7355de8adcae7c0ffce1e61))
+- Bundle binds host imports through core's hostShim, floored at beta.18 ([673bb8a](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/673bb8acd7027ce0af68b5c8cc2636d230b44332))
+- Tests fail on a reported contract violation ([1a94704](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/1a9470401b3b70beb24dcb1d5c4cbd1ae167f764))
+- Lint src with display-kit's conformance rules ([311923f](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/311923f01cae7fb0c6a3620692ee86777086f486))
+- Format the triaged agent-docs ([6655c90](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/6655c9046de6a474fe5ae1c55531acfd16d171e0))
+
 ## [0.1.5](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/v0.1.4...v0.1.5) (2026-10-30)
 
 ### Other Changes
