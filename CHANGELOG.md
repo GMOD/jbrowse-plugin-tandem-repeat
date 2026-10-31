@@ -1,3 +1,9 @@
+## [0.2.1](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/v0.2.0...v0.2.1) (2026-10-31)
+
+### Other Changes
+
+- Fix four ways a <CNV:TR> record drew wrong, matching the variant widget's card ([57e1663](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/commit/57e16635b98dd2b28bdd737492efbe77bb4dfd70))
+
 ## [0.2.0](https://github.com/GMOD/jbrowse-plugin-tandem-repeat/compare/v0.1.5...v0.2.0) (2026-10-31)
 
 ### Other Changes
