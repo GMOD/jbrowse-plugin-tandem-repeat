@@ -1,5 +1,12 @@
 # jbrowse-plugin-tandem-repeat
 
+> **No new features.** The **Tandem repeat** card in JBrowse's variant feature
+> widget (5.0.0-beta.19 and later) draws the same `<CNV:TR>` records with no
+> plugin installed: click the record. New work happens there, and bug fixes to
+> this plugin still ship. `tandem-repeat-vcf.mjs` and `trgt-to-cnv-tr.mjs` are
+> maintained in
+> [jbrowse-components' `scripts/`](https://github.com/GMOD/jbrowse-components/tree/main/scripts).
+
 A JBrowse 2 view of a tandem repeat's alleles: one bar per haplotype on its own
 bp axis, with each copy coloured by its repeat unit.
 
