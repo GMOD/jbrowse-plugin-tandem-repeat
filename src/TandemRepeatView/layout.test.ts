@@ -204,3 +204,26 @@ describe('facet sections', () => {
     })
   })
 })
+
+test('a corrupt copy count draws one box, and a negative RUB draws empty', () => {
+  expect(
+    copiesOf(
+      { label: 'a', bp: 5548, runs: [{ unit: 0, count: 1e9, bp: 5548 }] },
+      units,
+    ),
+  ).toEqual([{ start: 0, bp: 5548, unit: 0 }])
+  expect(
+    copiesOf(
+      {
+        label: 'a',
+        bp: 10,
+        runs: [{ unit: 0, count: 2, bp: 10, copyBp: [12, -2] }],
+      },
+      units,
+    ).map(c => c.bp),
+  ).toEqual([12, 0])
+})
+
+test('axis ticks step at least a base, however short the allele', () => {
+  expect(axisTicks(3)).toEqual([0, 1, 2, 3])
+})

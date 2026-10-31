@@ -101,7 +101,8 @@ interface ParsedRun {
 }
 
 // Each ALT allele's runs; undefined for an allele that is not <CNV:TR> or has a
-// run stating no unit
+// run stating no unit or a negative count. A run of zero copies is the allele
+// carrying none of that unit, so it is left out and the allele kept.
 function tandemAlleles(f: FeatureLike) {
   const alts = strings(own(f, 'ALT'))
   const rn = numbers(info(f, 'RN'))
@@ -117,6 +118,7 @@ function tandemAlleles(f: FeatureLike) {
   return alts.map((alt, i) => {
     const n = rn[i] ?? (alt === TANDEM_REPEAT ? 1 : 0)
     const runs: ParsedRun[] = []
+    let wellFormed = true
     for (let j = 0; j < n; j++, k++) {
       const stated = rus[k]
       const sequence = stated && IUPAC.test(stated) ? stated : undefined
@@ -125,7 +127,9 @@ function tandemAlleles(f: FeatureLike) {
       const bp = rb[k]
       const count =
         ruc[k] ?? (length && bp !== undefined ? bp / length : undefined)
-      if (length && count !== undefined) {
+      if (!length || count === undefined || count < 0) {
+        wellFormed = false
+      } else if (count > 0) {
         const copyBp =
           counted && rub.length > 0 ? rub.slice(copy, copy + count) : undefined
         runs.push({
@@ -140,7 +144,7 @@ function tandemAlleles(f: FeatureLike) {
       }
       copy += count ?? 0
     }
-    return alt === TANDEM_REPEAT && runs.length === n ? runs : undefined
+    return alt === TANDEM_REPEAT && wellFormed ? runs : undefined
   })
 }
 
@@ -202,7 +206,7 @@ function sampleAlleles(
     const gt = strings(fields.GT)[0] ?? ''
     const phased = gt.includes('|')
     const called = gt.split(/[/|]/).flatMap((index, k) => {
-      const i = Number(index)
+      const i = index === '' ? NaN : Number(index)
       const runs = i > 0 ? alleles[i - 1] : undefined
       if (!Number.isInteger(i) || (i > 0 && !runs)) {
         return []
@@ -235,8 +239,11 @@ export function tandemRepeatOf(f: FeatureLike): TandemRepeat | undefined {
   }
   const refName = own(f, 'refName') as string
   const start = (own(f, 'start') as number) + 1
-  const svlen = numbers(info(f, 'SVLEN'))[0]
-  const end = svlen === undefined ? (own(f, 'end') as number) : start + svlen
+  const svlen = numbers(info(f, 'SVLEN'))[
+    strings(own(f, 'ALT')).indexOf(TANDEM_REPEAT)
+  ]
+  const end =
+    svlen === undefined ? (own(f, 'end') as number) : start + Math.abs(svlen)
   const called = sampleAlleles(f, alleles, end - start)
   const drawn =
     called.length > 0

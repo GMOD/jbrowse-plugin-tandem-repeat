@@ -108,3 +108,37 @@ test('RUNAME names each unit, which the legend then uses', () => {
     true,
   )
 })
+
+test('an uncalled haploid genotype draws nothing, not the reference', () => {
+  const repeat = tandemRepeatOf({
+    ...tandem,
+    samples: { HG00128: { GT: ['.'] }, HG00133: { GT: ['1'] } },
+  })!
+  expect(repeat.alleles.map(a => a.sample)).toEqual(['HG00133'])
+})
+
+test("the reference span reads SVLEN at the <CNV:TR> allele's index, unsigned", () => {
+  const repeat = tandemRepeatOf({
+    ...tandem,
+    ALT: ['<DEL>', '<CNV:TR>'],
+    INFO: { SVLEN: [-500, -30], RN: [0, 1], RUS: [A], RUC: [3], RB: [30] },
+    samples: {},
+  })!
+  expect(repeat.end - repeat.start).toBe(30)
+})
+
+test('a negative count marks the allele malformed; zero copies drops only the run', () => {
+  expect(
+    tandemRepeatOf({
+      ...base,
+      ALT: ['<CNV:TR>'],
+      INFO: { SVLEN: [30], RN: [1], RUL: [10], RUC: [-3], RB: [30] },
+    }),
+  ).toBeUndefined()
+  const repeat = tandemRepeatOf({
+    ...base,
+    ALT: ['<CNV:TR>'],
+    INFO: { SVLEN: [30], RN: [2], RUS: [B, A], RUC: [0, 3], RB: [0, 30] },
+  })!
+  expect(repeat.alleles[0]!.runs).toEqual([{ unit: 0, count: 3, bp: 30 }])
+})

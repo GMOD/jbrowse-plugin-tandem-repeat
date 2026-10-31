@@ -1,7 +1,7 @@
 import { groupKeyComparator } from '@jbrowse/core/util/groupKeys'
 
 import type { Facet, SampleRow } from '../sampleMetadata'
-import type { RepeatAllele, RepeatUnit } from '../tandemRepeat'
+import type { RepeatAllele, RepeatRun, RepeatUnit } from '../tandemRepeat'
 
 export interface CopyBox {
   // bp from the allele's left end
@@ -13,20 +13,30 @@ export interface CopyBox {
 // Each copy an allele's runs state. RUB gives each copy's bases; without it a
 // whole count splits its run evenly, and a fractional count takes whole units
 // with the remainder last.
+// a run stating more copies than this draws as one box, so a corrupt count
+// cannot allocate a box per copy
+const MAX_COPIES = 50_000
+
+function copyLengths(run: RepeatRun, units: RepeatUnit[]) {
+  const n = Math.ceil(run.count)
+  const each = Number.isInteger(run.count)
+    ? run.bp / n
+    : (units[run.unit]?.length ?? run.bp / run.count)
+  return run.count > MAX_COPIES
+    ? [run.bp]
+    : (
+        run.copyBp ??
+        Array.from({ length: n }, (_, i) =>
+          i < n - 1 ? each : run.bp - each * (n - 1),
+        )
+      ).map(bp => Math.max(0, bp))
+}
+
 export function copiesOf(allele: RepeatAllele, units: RepeatUnit[]) {
   const boxes: CopyBox[] = []
   let at = 0
   for (const run of allele.runs ?? []) {
-    const n = Math.ceil(run.count)
-    const each = Number.isInteger(run.count)
-      ? run.bp / n
-      : (units[run.unit]?.length ?? run.bp / run.count)
-    const lengths =
-      run.copyBp ??
-      Array.from({ length: n }, (_, i) =>
-        i < n - 1 ? each : run.bp - each * (n - 1),
-      )
-    for (const bp of lengths) {
+    for (const bp of copyLengths(run, units)) {
       boxes.push({ start: at, bp, unit: run.unit })
       at += bp
     }
@@ -193,8 +203,10 @@ export function axisTicks(max: number, target = 6) {
   }
   const raw = max / target
   const power = 10 ** Math.floor(Math.log10(raw))
-  const step =
-    [1, 2, 5, 10].map(m => m * power).find(s => s >= raw) ?? 10 * power
+  const step = Math.max(
+    1,
+    [1, 2, 5, 10].map(m => m * power).find(s => s >= raw) ?? 10 * power,
+  )
   const ticks: number[] = []
   for (let t = 0; t <= max; t += step) {
     ticks.push(t)
