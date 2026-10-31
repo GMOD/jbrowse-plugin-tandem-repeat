@@ -50,7 +50,7 @@ const legendRow = {
   whiteSpace: 'nowrap' as const,
 }
 
-function Legend({
+const Legend = observer(function Legend({
   repeat,
   referenceBp,
 }: {
@@ -95,12 +95,12 @@ function Legend({
       </div>
     </div>
   )
-}
+})
 
 // Chrome's style recalc grows superlinearly in SVG <title>s under CssBaseline's
 // `* { box-sizing: inherit }`, and KIV-2's 9,000 copies froze the page for 10 s,
 // so a row renders its titles while hovered
-function Row({
+const Row = observer(function Row({
   allele,
   repeat,
   y,
@@ -206,16 +206,16 @@ function Row({
       ) : null}
     </g>
   )
-}
+})
 
-function EmptyState() {
+const EmptyState = observer(function EmptyState() {
   return (
     <Typography variant="body2" style={{ padding: PAD }}>
       Right-click a VCF 4.5 &lt;CNV:TR&gt; record in a variant track and choose{' '}
       <b>Show repeat copies</b>.
     </Typography>
   )
-}
+})
 
 const TandemRepeatView = observer(function TandemRepeatView({
   model,

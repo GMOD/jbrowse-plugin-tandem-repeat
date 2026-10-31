@@ -56,6 +56,7 @@ async function refetch(self: DisplayModel, slim: Feature) {
   const features = await rpcManager.call(
     getRpcSessionId(self),
     'CoreGetFeatures',
+    // eslint-disable-next-line no-restricted-syntax -- one record fetched on a menu click; no view or dialog exists yet to cancel it or show its progress
     {
       adapterConfig: getConf(track, 'adapter'),
       regions: [
@@ -98,6 +99,7 @@ async function samplesOf(self: DisplayModel) {
     return sampleRowsOf(self.sources)
   }
   const { rpcManager } = getSession(self)
+  // eslint-disable-next-line no-restricted-syntax -- the samples' metadata fetched on a menu click; no view or dialog exists yet to cancel it or show its progress
   const answer = (await rpcManager.call(getRpcSessionId(self), GET_SOURCES, {
     adapterConfig: getConf(getContainingTrack(self), 'adapter'),
   })) as { sources?: unknown } | undefined

@@ -1,3 +1,8 @@
+import {
+  displayRestrictedSyntax,
+  noUseEffectEvent,
+  unobservedComponents,
+} from '@jbrowse/display-kit/conformance/lintRules'
 import eslint from '@eslint/js'
 import { defineConfig } from 'eslint/config'
 import { importX } from 'eslint-plugin-import-x'
@@ -137,6 +142,23 @@ export default defineConfig(
           ignoreRestSiblings: true,
           caughtErrors: 'none',
         },
+      ],
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': ['error', ...displayRestrictedSyntax],
+      'no-restricted-imports': ['error', { paths: [noUseEffectEvent] }],
+    },
+  },
+  {
+    files: ['src/**/*.tsx'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...displayRestrictedSyntax,
+        ...unobservedComponents,
       ],
     },
   },
