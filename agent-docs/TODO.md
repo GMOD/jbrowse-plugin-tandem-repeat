@@ -1,6 +1,8 @@
 ---
 name: todo
-description: Index of the open action items in todo/, grouped by what to do first. Read when picking up work, and before filing anything new here.
+description:
+  Index of the open action items in todo/, grouped by what to do first. Read
+  when picking up work, and before filing anything new here.
 ---
 
 # Todo
@@ -15,6 +17,6 @@ Commitment, not size, separates an item here from a proposal in
 
 ## Ready to take
 
-| Item | Area | First move |
-| --- | --- | --- |
+| Item                                       | Area    | First move                                                                                          |
+| ------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------- |
 | [vamos to CNV:TR](todo/vamos-to-cnv-tr.md) | records | Write a converter beside `scripts/trgt-to-cnv-tr.mjs` that maps `RU` and `ALTANNO_H1`/`ALTANNO_H2`. |

@@ -1,6 +1,8 @@
 ---
 name: records-from-a-graph-scope
-description: Why the graph-record script runs on KIV-2 only, not ABCA7, CFHR or AMY1 (decided 2026-10-04).
+description:
+  Why the graph-record script runs on KIV-2 only, not ABCA7, CFHR or AMY1
+  (decided 2026-10-04).
 ---
 
 # Records from a graph
