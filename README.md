@@ -127,7 +127,7 @@ grouped by `superpopulation`:
 
 ## Usage
 
-Needs JBrowse 5.0.0-beta.9 or later.
+Needs JBrowse 5.0.0-beta.18 or later.
 
 ```json
 {
@@ -148,6 +148,7 @@ pnpm start      # serves the bundle on port 9000
 pnpm test
 pnpm figures    # reshoots img/ from the hosted HPRC demo on a released JBrowse
 pnpm host-compat  # boots dist/ in the HPRC demo on each hosted release
+pnpm check-host-floor  # builds against what v5.0.0-beta.18 serves to plugins
 ```
 
 `pnpm figures` answers the demo's config request with this plugin added and
@@ -155,6 +156,10 @@ serves the local `dist/` in place of the published bundle, then right-clicks the
 record and chooses the menu item as a reader would.
 
 `pnpm host-compat` serves `dist/` the same way to the demo's own config on
-v5.0.0-beta.9, v5.0.0-beta.11 and main, opens the cohort track's repeat, and
-fails if a host error-pages, never registers the plugin, or draws no rows. CI
-runs it on every push and `pnpm version` runs it before tagging.
+v5.0.0-beta.18 and main, opens the cohort track's repeat, and fails if a host
+error-pages, never registers the plugin, or draws no rows. CI runs it on every
+push and `pnpm version` runs it before tagging.
+
+`pnpm check-host-floor` builds the bundle against what v5.0.0-beta.18, the
+oldest supported host, serves to plugins, and fails on an import only a newer
+JBrowse provides. CI and `pnpm version` run it too.

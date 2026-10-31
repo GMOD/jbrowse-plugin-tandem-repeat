@@ -10,7 +10,7 @@
 //
 // Usage:
 //   node scripts/host-compat-probe.mjs
-//   node scripts/host-compat-probe.mjs --versions v5.0.0-beta.9,main --dist dist
+//   node scripts/host-compat-probe.mjs --versions v5.0.0-beta.18,main --dist dist
 //
 import path from 'node:path'
 import { parseArgs } from 'node:util'
@@ -26,7 +26,7 @@ import {
   trackSession,
 } from './hostedDemo.mjs'
 
-const DEFAULT_VERSIONS = ['v5.0.0-beta.9', 'v5.0.0-beta.11', 'main']
+const DEFAULT_VERSIONS = ['v5.0.0-beta.18', 'main']
 const TRACK = {
   trackId: 'hprc_kiv2_copies_all',
   display: 'LinearVariantDisplay',

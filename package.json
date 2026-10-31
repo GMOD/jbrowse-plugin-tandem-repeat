@@ -35,8 +35,9 @@
     "test:watch": "vitest",
     "figures": "node scripts/shoot-figures.mjs",
     "host-compat": "node scripts/host-compat-probe.mjs",
+    "check-host-floor": "node scripts/check-host-floor.mjs",
     "prepack": "pnpm build",
-    "preversion": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build && pnpm host-compat",
+    "preversion": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build && pnpm check-host-floor && pnpm host-compat",
     "version": "node scripts/version.mjs",
     "postversion": "git push --follow-tags"
   },
@@ -47,7 +48,6 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@eslint/js": "^10.0.1",
-    "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
     "@jbrowse/mobx-state-tree": "^6.10.0",
     "@mui/icons-material": "^9.5.0",
     "@mui/material": "^9.5.0",

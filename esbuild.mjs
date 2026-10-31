@@ -1,30 +1,12 @@
 import fs from 'node:fs'
 import http from 'node:http'
 import * as esbuild from 'esbuild'
-import { globalExternals } from '@fal-works/esbuild-plugin-global-externals'
-import JBrowseReExports from '@jbrowse/core/ReExports/list'
 import prettyBytes from 'pretty-bytes'
+
+import { buildOptions } from './scripts/buildOptions.mjs'
 
 const isWatch = process.argv.includes('--watch')
 const PORT = process.env.PORT ? +process.env.PORT : 9000
-
-// Plugins must reuse the React/MUI/mobx instances JBrowse already loaded via
-// window.JBrowseExports — bundling a second copy causes duplicate-React errors.
-function createGlobalMap(jbrowseGlobals) {
-  return {
-    ...Object.fromEntries(
-      jbrowseGlobals.map(g => [
-        g,
-        { varName: `JBrowseExports["${g}"]`, type: 'cjs' },
-      ]),
-    ),
-    // v4+ package name, but JBrowse exports it as 'mobx-state-tree' for back-compat.
-    '@jbrowse/mobx-state-tree': {
-      varName: `JBrowseExports["mobx-state-tree"]`,
-      type: 'cjs',
-    },
-  }
-}
 
 const rebuildLogPlugin = {
   name: 'rebuild-log',
@@ -46,22 +28,10 @@ const rebuildLogPlugin = {
   },
 }
 
-const globals = JBrowseReExports
+const base = buildOptions()
 const config = {
-  entryPoints: ['src/index.ts'],
-  bundle: true,
-  // Native ESM plugin, loaded via an `esmUrl` plugin definition. Splitting
-  // emits any dynamic import as a content-hashed sibling chunk the browser
-  // resolves relative to the plugin's own module url, which works the same on
-  // the main thread and in the RPC worker.
-  format: 'esm',
-  splitting: true,
-  outdir: 'dist',
-  chunkNames: 'chunks/[name]-[hash]',
-  // Automatic JSX runtime; react/jsx-runtime is a JBrowse global (ReExports).
-  jsx: 'automatic',
-  metafile: true,
-  plugins: [globalExternals(createGlobalMap(globals)), rebuildLogPlugin],
+  ...base,
+  plugins: [...base.plugins, rebuildLogPlugin],
   ...(isWatch
     ? { entryNames: 'out' }
     : {
